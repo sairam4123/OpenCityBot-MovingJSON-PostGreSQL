@@ -40,13 +40,11 @@ class Suggestions(commands.Cog):
             INSERT INTO id_data (suggestion_id)
             VALUES ($1)
             """, self.bot.start_number)
-            await ctx.reinvoke()
         if not suggestion_number:
             await self.bot.pg_conn.execute("""
             INSERT INTO count_data (guild_id, suggestion_number)
             VALUES ($1, $2)
             """, ctx.guild.id, 1)
-            await ctx.reinvoke()
         title = f"Suggestion #{suggestion_number}"
         embed = discord.Embed(
             title=title,
