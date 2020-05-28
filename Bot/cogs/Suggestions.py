@@ -18,7 +18,7 @@ class Suggestions(commands.Cog):
          SELECT enabled FROM cogs_data
          WHERE guild_id = $1
          """, ctx.guild.id)
-        if f"Bot.cogs.{self.qualified_name}" in enabled:
+        if f"Bot.cogs.{self.qualified_name}" in enabled[0]:
             return True
         return False
 

@@ -15,65 +15,70 @@ class Voice_Text_Link(commands.Cog):
         SELECT enabled FROM cogs_data
         WHERE guild_id = $1
         """, ctx.guild.id)
-        if f"Bot.cogs.{self.qualified_name}" in enabled:
+        if f"Bot.cogs.{self.qualified_name}" in enabled[0]:
             return True
         return False
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        voice_text_data = await self.bot.pg_conn.fetch("""
-                    SELECT * FROM voice_text_data 
-                    WHERE guild_id = $1
+        enabled = self.bot.pg_conn.fetchrow("""
+                SELECT enabled FROM cogs_data
+                WHERE guild_id = $1
                 """, member.guild.id)
-        join_overwrites = {
-            member.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, read_message_history=False),
-            member: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True)
-        }
-        leave_overwrites = {
-            member.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, read_message_history=False),
-            member: discord.PermissionOverwrite(read_messages=False, send_messages=False, read_message_history=False)
-        }
-        try:
-            for voice_text_link1 in voice_text_data:
-                voice_channel1 = discord.utils.get(member.guild.voice_channels, id=voice_text_link1['voice_channel_id'])
-                if after.channel == voice_channel1 and before.channel is None:
-                    print(f"{member.display_name} joined the voice channel {voice_channel1.name}")
-                    channel: discord.TextChannel = discord.utils.get(member.guild.text_channels, id=voice_text_link1['text_channel_id'])
-                    await channel.edit(overwrites=join_overwrites)
-                    break
-                if after.channel is None and before.channel == voice_channel1:
-                    print(f"{member.display_name} left the voice channel {voice_channel1.name}")
-                    channel: discord.TextChannel = discord.utils.get(member.guild.text_channels, id=voice_text_link1['text_channel_id'])
-                    await channel.edit(overwrites=leave_overwrites)
-                    await channel.set_permissions(member, overwrite=None)
-                    break
+        if f"Bot.cogs.{self.qualified_name}" in enabled[0]:
+            voice_text_data = await self.bot.pg_conn.fetch("""
+                        SELECT * FROM voice_text_data 
+                        WHERE guild_id = $1
+                    """, member.guild.id)
+            join_overwrites = {
+                member.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, read_message_history=False),
+                member: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True)
+            }
+            leave_overwrites = {
+                member.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, read_message_history=False),
+                member: discord.PermissionOverwrite(read_messages=False, send_messages=False, read_message_history=False)
+            }
+            try:
+                for voice_text_link1 in voice_text_data:
+                    voice_channel1 = discord.utils.get(member.guild.voice_channels, id=voice_text_link1['voice_channel_id'])
+                    if after.channel == voice_channel1 and before.channel is None:
+                        print(f"{member.display_name} joined the voice channel {voice_channel1.name}")
+                        channel: discord.TextChannel = discord.utils.get(member.guild.text_channels, id=voice_text_link1['text_channel_id'])
+                        await channel.edit(overwrites=join_overwrites)
+                        break
+                    if after.channel is None and before.channel == voice_channel1:
+                        print(f"{member.display_name} left the voice channel {voice_channel1.name}")
+                        channel: discord.TextChannel = discord.utils.get(member.guild.text_channels, id=voice_text_link1['text_channel_id'])
+                        await channel.edit(overwrites=leave_overwrites)
+                        await channel.set_permissions(member, overwrite=None)
+                        break
 
-                if member.voice is not None:
-                    before_channel_link = None
-                    after_channel_link = None
-                    if before.channel:
-                        before_channel_link = await self.bot.pg_conn.fetchval("""
-                                                    SELECT text_channel_id FROM voice_text_data 
-                                                    WHERE guild_id = $1 AND voice_channel_id = $2
-                                                    """, member.guild.id, before.channel.id)
-                    if after.channel:
-                        after_channel_link = await self.bot.pg_conn.fetchval("""
-                                                    SELECT text_channel_id FROM voice_text_data 
-                                                    WHERE guild_id = $1 AND voice_channel_id = $2
-                                                    """, member.guild.id, after.channel.id)
-                    if member.voice.channel == after.channel:
-                        print(f"{member.name} switched the voice channel from {before.channel} to {after.channel}")
-                        if before_channel_link:
-                            before_channel: discord.TextChannel = discord.utils.get(member.guild.text_channels,
-                                                                                    id=before_channel_link)
-                            await before_channel.edit(overwrites=leave_overwrites)
-                        if after_channel_link:
-                            after_channel: discord.TextChannel = discord.utils.get(member.guild.text_channels,
-                                                                                   id=after_channel_link)
-                            await after_channel.edit(overwrites=join_overwrites)
+                    if member.voice is not None:
+                        before_channel_link = None
+                        after_channel_link = None
+                        if before.channel:
+                            before_channel_link = await self.bot.pg_conn.fetchval("""
+                                                        SELECT text_channel_id FROM voice_text_data 
+                                                        WHERE guild_id = $1 AND voice_channel_id = $2
+                                                        """, member.guild.id, before.channel.id)
+                        if after.channel:
+                            after_channel_link = await self.bot.pg_conn.fetchval("""
+                                                        SELECT text_channel_id FROM voice_text_data 
+                                                        WHERE guild_id = $1 AND voice_channel_id = $2
+                                                        """, member.guild.id, after.channel.id)
+                        if member.voice.channel == after.channel:
+                            print(f"{member.name} switched the voice channel from {before.channel} to {after.channel}")
+                            if before_channel_link:
+                                before_channel: discord.TextChannel = discord.utils.get(member.guild.text_channels,
+                                                                                        id=before_channel_link)
+                                await before_channel.edit(overwrites=leave_overwrites)
+                            if after_channel_link:
+                                after_channel: discord.TextChannel = discord.utils.get(member.guild.text_channels,
+                                                                                       id=after_channel_link)
+                                await after_channel.edit(overwrites=join_overwrites)
 
-        except KeyError:
-            pass
+            except KeyError:
+                pass
 
     @commands.group(aliases=["vtl", "voice_link"], invoke_without_command=True)
     async def voice_text_link(self, ctx):

@@ -83,78 +83,99 @@ class Configuration(commands.Cog):
                 """, ctx.guild.id, prefix_list[0])
         await ctx.send(f"Removed prefix {prefix}")
 
-    # @commands.group(name="plugin", help="Shows the enabled plugins for this server!", invoke_without_command=True, aliases=['plugins'])
-    # async def plugin(self, ctx: commands.Context):
-    #     guild_data =
-    #     enabled = guild_data[str(ctx.guild.id)]["enabled"]
-    #     embed = discord.Embed()
-    #     embed.title = "Enabled modules of this server!"
-    #     msg = ''
-    #     for index, item in enumerate(enabled):
-    #         index += 1
-    #         msg += f"{index}. {item.lstrip('Bot.').lstrip('cogs.')}\n"
-    #     embed.description = msg
-    #     embed.set_author(name=ctx.me.name, icon_url=ctx.me.avatar_url)
-    #     await ctx.send(embed=embed)
-    #
-    # @plugin.command(name="enable", help="Enables given plugin!", aliases=['+'])
-    # @commands.check_any(is_guild_owner(), commands.is_owner())
-    # async def plugin_enable(self, ctx: commands.Context, plugin_ext: str):
-    #     guild_data = json.load(open(self.bot.guilds_json))
-    #     enabled = guild_data[str(ctx.guild.id)]["enabled"]
-    #     disabled = guild_data[str(ctx.guild.id)]["disabled"]
-    #     plugin_to_enable = f"Bot.cogs.{plugin_ext.replace('_', ' ').title().replace(' ', '_')}"
-    #     if plugin_to_enable in enabled:
-    #         await ctx.send("Plugin already enabled!")
-    #     else:
-    #         try:
-    #             disabled.remove(plugin_to_enable)
-    #         except ValueError:
-    #             pass
-    #         enabled.append(plugin_to_enable)
-    #         await ctx.send("Plugin enabled successfully")
-    #         try:
-    #             if enabled:
-    #                 enabled.remove("None")
-    #         except ValueError:
-    #             pass
-    #         try:
-    #             if not disabled:
-    #                 disabled.append("None")
-    #         except ValueError:
-    #             pass
-    #     with open(self.bot.guilds_json, "w+") as f:
-    #         json.dump(guild_data, f, indent='\t')
-    #
-    # @plugin.command(name="disable", help="Disables given plugin!", aliases=['-'])
-    # @commands.check_any(is_guild_owner(), commands.is_owner())
-    # async def plugin_disable(self, ctx: commands.Context, plugin_ext: str):
-    #     guild_data = json.load(open(self.bot.guilds_json))
-    #     enabled = guild_data[str(ctx.guild.id)]["enabled"]
-    #     disabled = guild_data[str(ctx.guild.id)]["disabled"]
-    #     plugin_to_disable = f"Bot.cogs.{plugin_ext.replace('_', ' ').title().replace(' ', '_')}"
-    #     # print(plugin_to_disable)
-    #     if plugin_to_disable in disabled:
-    #         await ctx.send("Plugin already disabled!")
-    #     else:
-    #         try:
-    #             enabled.remove(plugin_to_disable)
-    #         except ValueError:
-    #             pass
-    #         disabled.append(plugin_to_disable)
-    #         await ctx.send("Plugin disabled successfully")
-    #         try:
-    #             if disabled:
-    #                 disabled.remove("None")
-    #         except ValueError:
-    #             pass
-    #         try:
-    #             if not enabled:
-    #                 enabled.append("None")
-    #         except ValueError:
-    #             pass
-    #     with open(self.bot.guilds_json, "w+") as f:
-    #         json.dump(guild_data, f, indent='\t')
+    @commands.group(name="plugin", help="Shows the enabled plugins for this server!", invoke_without_command=True, aliases=['plugins'])
+    async def plugin(self, ctx: commands.Context):
+        enabled = await self.bot.pg_conn.fetchrow("""
+         SELECT enabled FROM cogs_data
+         WHERE guild_id = $1
+         """, ctx.guild.id)
+        embed = discord.Embed()
+        embed.title = "Enabled modules of this server!"
+        msg = ''
+        for index, item in enumerate(enabled[0]):
+            index += 1
+            msg += f"{index}. {item.lstrip('Bot.').lstrip('cogs.')}\n"
+        embed.description = msg
+        embed.set_author(name=ctx.me.name, icon_url=ctx.me.avatar_url)
+        await ctx.send(embed=embed)
+
+    @plugin.command(name="enable", help="Enables given plugin!", aliases=['+'])
+    @commands.check_any(is_guild_owner(), commands.is_owner())
+    async def plugin_enable(self, ctx: commands.Context, plugin_ext: str):
+        enabled = await self.bot.pg_conn.fetchrow("""
+         SELECT enabled FROM cogs_data
+         WHERE guild_id = $1
+         """, ctx.guild.id)
+        disabled = await self.bot.pg_conn.fetchrow("""
+         SELECT disabled FROM cogs_data
+         WHERE guild_id = $1
+         """, ctx.guild.id)
+        plugin_to_enable = f"Bot.cogs.{plugin_ext.replace('_', ' ').title().replace(' ', '_')}"
+        if plugin_to_enable in enabled[0]:
+            await ctx.send("Plugin already enabled!")
+        else:
+            try:
+                disabled[0].remove(plugin_to_enable)
+            except ValueError:
+                pass
+            enabled[0].append(plugin_to_enable)
+            await ctx.send("Plugin enabled successfully")
+            try:
+                if enabled[0]:
+                    enabled[0].remove("None")
+            except ValueError:
+                pass
+            try:
+                if not disabled[0]:
+                    disabled[0].append("None")
+            except ValueError:
+                pass
+
+        await self.bot.pg_conn.execute("""
+            UPDATE cogs_data 
+            SET enabled = $2,
+                disabled = $3
+            WHERE guild_id = $1
+        """, ctx.guild.id, enabled[0], disabled[0])
+
+    @plugin.command(name="disable", help="Disables given plugin!", aliases=['-'])
+    @commands.check_any(is_guild_owner(), commands.is_owner())
+    async def plugin_disable(self, ctx: commands.Context, plugin_ext: str):
+        enabled = await self.bot.pg_conn.fetchrow("""
+         SELECT enabled FROM cogs_data
+         WHERE guild_id = $1
+         """, ctx.guild.id)
+        disabled = await self.bot.pg_conn.fetchrow("""
+         SELECT disabled FROM cogs_data
+         WHERE guild_id = $1
+         """, ctx.guild.id)
+        plugin_to_disable = f"Bot.cogs.{plugin_ext.replace('_', ' ').title().replace(' ', '_')}"
+        if plugin_to_disable in disabled[0]:
+            await ctx.send("Plugin already disabled!")
+        else:
+            try:
+                enabled[0].remove(plugin_to_disable)
+            except ValueError:
+                pass
+            disabled[0].append(plugin_to_disable)
+            await ctx.send("Plugin disabled successfully")
+            try:
+                if disabled[0]:
+                    disabled[0].remove("None")
+            except ValueError:
+                pass
+            try:
+                if not enabled[0]:
+                    enabled[0].append("None")
+            except ValueError:
+                pass
+
+        await self.bot.pg_conn.execute("""
+            UPDATE cogs_data 
+            SET enabled = $2,
+                disabled = $3
+            WHERE guild_id = $1
+            """, ctx.guild.id, enabled[0], disabled[0])
 
 
 def setup(bot):
