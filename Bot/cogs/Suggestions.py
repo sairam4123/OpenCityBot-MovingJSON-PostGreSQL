@@ -14,11 +14,13 @@ class Suggestions(commands.Cog):
     async def cog_check(self, ctx):
         if ctx.channel.type == discord.ChannelType.private:
             return True
-        enabled = await self.bot.pg_conn.fetchrow("""
+        if await self.bot.is_owner(ctx.author):
+            return True
+        enabled = await self.bot.pg_conn.fetchval("""
          SELECT enabled FROM cogs_data
          WHERE guild_id = $1
          """, ctx.guild.id)
-        if f"Bot.cogs.{self.qualified_name}" in enabled[0]:
+        if f"Bot.cogs.{self.qualified_name}" in enabled:
             return True
         return False
 
@@ -139,7 +141,7 @@ class Suggestions(commands.Cog):
         """, suggestion_id, "denied", suggestion_moderator)
         await ctx.send(f"Denied suggestion {suggestion_id} because of {reason}")
 
-    @suggest.command(name="consider", help="Marks a suggestion as considered.")
+    @suggestion.command(name="consider", help="Marks a suggestion as considered.")
     async def suggestion_consider(self, ctx: commands.Context, suggestion_id: int, *, reason: Optional[str] = None):
         suggestion = [self.bot.pg_conn.execute("""
                     SELECT * FROM suggestion_data

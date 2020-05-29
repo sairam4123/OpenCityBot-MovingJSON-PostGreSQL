@@ -8,24 +8,26 @@ class Voice_Text_Link(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def cog_check(self, ctx):
+    async def cog_check(self, ctx):
         if ctx.channel.type == discord.ChannelType.private:
             return True
-        enabled = self.bot.pg_conn.fetchrow("""
+        if await self.bot.is_owner(ctx.author):
+            return True
+        enabled = await self.bot.pg_conn.fetchval("""
         SELECT enabled FROM cogs_data
         WHERE guild_id = $1
         """, ctx.guild.id)
-        if f"Bot.cogs.{self.qualified_name}" in enabled[0]:
+        if f"Bot.cogs.{self.qualified_name}" in enabled:
             return True
         return False
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        enabled = self.bot.pg_conn.fetchrow("""
+        enabled = self.bot.pg_conn.fetchval("""
                 SELECT enabled FROM cogs_data
                 WHERE guild_id = $1
                 """, member.guild.id)
-        if f"Bot.cogs.{self.qualified_name}" in enabled[0]:
+        if f"Bot.cogs.{self.qualified_name}" in enabled:
             voice_text_data = await self.bot.pg_conn.fetch("""
                         SELECT * FROM voice_text_data 
                         WHERE guild_id = $1
@@ -41,13 +43,13 @@ class Voice_Text_Link(commands.Cog):
             try:
                 for voice_text_link1 in voice_text_data:
                     voice_channel1 = discord.utils.get(member.guild.voice_channels, id=voice_text_link1['voice_channel_id'])
-                    if after.channel == voice_channel1 and before.channel is None:
-                        print(f"{member.display_name} joined the voice channel {voice_channel1.name}")
+                    if after.channel is not None and before.channel is None:
+                        print(f"{member.display_name} joined the voice channel {after.channel}")
                         channel: discord.TextChannel = discord.utils.get(member.guild.text_channels, id=voice_text_link1['text_channel_id'])
                         await channel.edit(overwrites=join_overwrites)
                         break
-                    if after.channel is None and before.channel == voice_channel1:
-                        print(f"{member.display_name} left the voice channel {voice_channel1.name}")
+                    if after.channel is None and before.channel is not None:
+                        print(f"{member.display_name} left the voice channel {before.channel}")
                         channel: discord.TextChannel = discord.utils.get(member.guild.text_channels, id=voice_text_link1['text_channel_id'])
                         await channel.edit(overwrites=leave_overwrites)
                         await channel.set_permissions(member, overwrite=None)
@@ -104,7 +106,6 @@ class Voice_Text_Link(commands.Cog):
             await ctx.send("You didn't send voice channel or text channel!")
         else:
 
-            # [str(ctx.guild.id)]["voice_text"][voice_channel_1.name] = text_channel_1.name
             await self.bot.pg_conn.execute("""
                 INSERT INTO voice_text_data (guild_id, voice_channel_id, text_channel_id)
                 VALUES ($1, $2, $3)

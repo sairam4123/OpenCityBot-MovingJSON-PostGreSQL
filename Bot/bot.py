@@ -19,7 +19,7 @@ TICKET_EMOJI = os.getenv('DEFAULT_TICKET_EMOJI')
 async def get_prefix(bot_1, message):
     if message.channel.type == discord.ChannelType.private:
         return commands.when_mentioned_or(*bot_1.prefix_default)(bot_1, message)
-    prefixes = await bot_1.pg_conn.fetchrow("""
+    prefixes = await bot_1.pg_conn.fetchval("""
     SELECT prefixes FROM prefix_data
     WHERE guild_id = $1
     """, message.guild.id)
@@ -29,7 +29,7 @@ async def get_prefix(bot_1, message):
         VALUES ($1, $2)
         """, message.guild.id, bot_1.prefix_default)
         return commands.when_mentioned_or(*bot_1.prefix_default)(bot_1, message)
-    return commands.when_mentioned_or(*prefixes[0])(bot_1, message)
+    return commands.when_mentioned_or(*prefixes)(bot_1, message)
 
 
 bot = commands.Bot(command_prefix=get_prefix)
@@ -50,13 +50,12 @@ bot.ticket_emoji_default = TICKET_EMOJI.split(DELIMITER)
 
 
 async def connection_for_pg():
-    bot.pg_conn = await asyncpg.connect(password="1234", port="5858", host="localhost", user="postgres", database="postgres")
+    bot.pg_conn = await asyncpg.create_pool(password="1234", port="5858", host="localhost", user="postgres", database="postgres")
 
 
 @bot.event
 async def on_ready():
     global BOT_IS_READY
-    await connection_for_pg()
     for guild_index, guild in enumerate(bot.guilds):
         print(
             f'{bot.user} is connected to the following guild:\n'
@@ -99,7 +98,7 @@ async def add_guild_to_db():
 # async def add_guild_to_db_error(error):
 #     raise error
 
-
+bot.loop.run_until_complete(connection_for_pg())
 add_guild_to_db.start()
 
 bot.run(TOKEN)
