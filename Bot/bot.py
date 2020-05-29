@@ -78,6 +78,28 @@ for filename in os.listdir('Bot/cogs'):
         bot.load_extension(f'Bot.cogs.{filename[:-3]}')
 
 
+@bot.event
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send("Command Not found!")
+    elif isinstance(error, commands.MissingPermissions):
+        await ctx.send("You don't have enough permissions.")
+    elif isinstance(error, commands.CheckAnyFailure):
+        await ctx.send("".join(error.args))
+    elif isinstance(error, commands.CheckFailure):
+        await ctx.send("".join(error.args))
+    elif isinstance(error, commands.PrivateMessageOnly):
+        await ctx.send("You're only allowed to use this command in Direct or Private Message only!")
+    elif isinstance(error, commands.NotOwner):
+        await ctx.send("You're not a owner till now!")
+    elif isinstance(error, commands.NoPrivateMessage):
+        await ctx.send("You can't send this commands here!")
+    elif isinstance(error, commands.CommandOnCooldown):
+        await ctx.send("The command you send is on cooldown!")
+    else:
+        raise error
+
+
 @tasks.loop(seconds=10)
 async def add_guild_to_db():
     await bot.wait_until_ready()
