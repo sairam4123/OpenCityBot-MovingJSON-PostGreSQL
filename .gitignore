@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 
 .idea/
+
+~*.py
+!/Bot/cogs/~Applications.py
+!/Bot/cogs/~Reaction_Roles.py
