@@ -48,6 +48,7 @@ def hello():
 
 bot.oauth_url = discord.utils.oauth_url(client_id=CLIENT_ID, permissions=discord.Permissions(8))
 bot.init_cogs = [f'Bot.cogs.{filename[:-3]}' for filename in os.listdir('Bot/cogs') if filename.endswith('.py')]
+bot.invite_url = discord.utils.oauth_url(client_id=CLIENT_ID, permissions=discord.Permissions(8))
 bot.start_time = datetime.datetime.utcnow()
 bot.prefix_default = PREFIX.split(DELIMITER)
 bot.start_number = 1000000000000000
