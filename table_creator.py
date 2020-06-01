@@ -337,5 +337,6 @@ TABLESPACE pg_default;
 ALTER TABLE public.voice_text_data
     OWNER to postgres;
     """)
+    print("created everything")
 
 create_tables()
