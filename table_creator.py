@@ -1,6 +1,7 @@
 import os
 
 import asyncpg
+import asyncio
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
@@ -339,4 +340,4 @@ ALTER TABLE public.voice_text_data
     """)
     print("created everything")
 
-create_tables()
+asyncio.run(create_tables())
