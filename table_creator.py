@@ -1,12 +1,10 @@
 import os
 
-import click
 import asyncpg
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 
-@click.command()
 async def create_tables():
     pg_conn = await asyncpg.connect(DATABASE_URL)
     await pg_conn.execute("""
@@ -339,3 +337,5 @@ TABLESPACE pg_default;
 ALTER TABLE public.voice_text_data
     OWNER to postgres;
     """)
+
+create_tables()
