@@ -65,7 +65,7 @@ class Configuration(commands.Cog):
                 UPDATE prefix_data
                 SET prefixes = $2
                 WHERE guild_id = $1
-                """, ctx.guild.id, prefix_list[0])
+                """, ctx.guild.id, prefix_list)
         await ctx.send(f"Added prefix to {prefix}")
 
     @prefix.command(name="remove", help="Removes the prefix for a guild with index value!", aliases=['-'])
@@ -80,7 +80,7 @@ class Configuration(commands.Cog):
                 UPDATE prefix_data
                 SET prefixes = $2
                 WHERE guild_id = $1
-                """, ctx.guild.id, prefix_list[0])
+                """, ctx.guild.id, prefix_list)
         await ctx.send(f"Removed prefix {prefix}")
 
     @commands.group(name="plugin", help="Shows the enabled plugins for this server!", invoke_without_command=True, aliases=['plugins'])

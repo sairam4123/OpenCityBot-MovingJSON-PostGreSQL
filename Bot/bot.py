@@ -17,6 +17,7 @@ DELIMITER = os.getenv('DEFAULT_DELIMITER_FOR_ENV')
 TICKET_EMOJI = os.getenv('DEFAULT_TICKET_EMOJI')
 IP_ADDRESS = os.getenv('IP_ADDRESS')
 PORT_NUMBER = os.getenv('PORT_NUMBER')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 
 async def get_prefix(bot_1, message):
@@ -53,7 +54,7 @@ bot.ticket_emoji_default = TICKET_EMOJI.split(DELIMITER)
 
 
 async def connection_for_pg():
-    bot.pg_conn = await asyncpg.create_pool(password="1234", port="5858", host="localhost", user="postgres", database="postgres")
+    bot.pg_conn = await asyncpg.create_pool(DATABASE_URL)
 
 
 @bot.event
