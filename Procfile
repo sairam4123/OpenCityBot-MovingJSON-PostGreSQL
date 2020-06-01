@@ -1,1 +1,1 @@
-worker: ./start.sh
+worker: chmod u+x start.sh && ./start.sh
