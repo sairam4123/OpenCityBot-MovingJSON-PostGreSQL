@@ -87,9 +87,9 @@ class Leveling(commands.Cog):
         """, member.guild.id, member.id)
 
     async def update_level(self, member: discord.Member):
-        old_user_level: int = await self.get_level(member)
+        old_user_level = await self.get_level(member)
         user_xps = await self.get_xps(member)
-        new_user_level: int = 0
+        new_user_level = 0
         if user_xps < self.xps_level[1]:
             new_user_level = 0
         elif self.xps_level[1] <= user_xps < self.xps_level[-1]:
@@ -104,7 +104,7 @@ class Leveling(commands.Cog):
     async def send_level_up_message(self, member: discord.Member, message: discord.Message, old_level, new_level):
         if new_level > old_level:
             await message.channel.send(f"{member.mention} "
-                                       f"You've leveled up to level {new_level}!")
+                                       f"You've leveled up to level `{new_level}` hurray!")
             await self.bot.pg_conn.execute("""
             UPDATE leveling_data
             SET level = $3
@@ -145,16 +145,21 @@ class Leveling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author == self.bot.user:
-            return
         if message.channel.type != discord.ChannelType.private:
-            await self.update_data(message.author)
-            if discord.utils.find(lambda r: r.name == 'Respected People', message.guild.roles) not in message.author.roles and message.author.bot is False:
-                user_category_1 = await self.return_user_category(message)
-                await self.update_xps(message.author, message)
-                old_level, new_level = await self.update_level(message.author)
-                await self.send_level_up_message(message.author, message, old_level, new_level)
-                await self.give_roles_according_to_level(user_category_1, message)
+            enabled = await self.bot.pg_conn.fetchval("""
+             SELECT enabled FROM cogs_data
+             WHERE guild_id = $1
+             """, message.guild.id)
+            if f"Bot.cogs.{self.qualified_name}" in enabled:
+                if message.author == self.bot.user:
+                    return
+                await self.update_data(message.author)
+                if discord.utils.find(lambda r: r.name == 'Respected People', message.guild.roles) not in message.author.roles and message.author.bot is False:
+                    user_category_1 = await self.return_user_category(message)
+                    await self.update_xps(message.author, message)
+                    old_level, new_level = await self.update_level(message.author)
+                    await self.send_level_up_message(message.author, message, old_level, new_level)
+                    await self.give_roles_according_to_level(user_category_1, message)
 
     async def check_new_role(self, before, after):
         new_role = next(role for role in after.roles if role not in before.roles)
@@ -173,7 +178,7 @@ class Leveling(commands.Cog):
         return new_role
 
     async def check_respected_people_status(self, new_role, after):
-        if new_role.name in [self.leveling_prefix[-1] + self.leveling_roles[i][0] for i in self.leveling_roles]:
+        if new_role.name in self.top_roles:
             respected_people_status = True
             for i in self.leveling_roles:
                 if discord.utils.find(lambda r: r.name == self.leveling_prefix[-1] + self.leveling_roles[i][0], after.guild.roles) not in after.roles:
@@ -200,12 +205,17 @@ class Leveling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if discord.utils.find(lambda r: r.name == 'Respected People', after.guild.roles) not in after.roles:
-            if len(before.roles) < len(after.roles):
-                new_role_1 = await self.check_new_role(before, after)
-                await self.check_respected_people_status(new_role_1, after)
-            elif len(before.roles) > len(after.roles):
-                await self.check_for_removed_role(before, after)
+        enabled = await self.bot.pg_conn.fetchval("""
+             SELECT enabled FROM cogs_data
+             WHERE guild_id = $1
+             """, after.guild.id)
+        if f"Bot.cogs.{self.qualified_name}" in enabled:
+            if discord.utils.find(lambda r: r.name == 'Respected People', after.guild.roles) not in after.roles:
+                if len(before.roles) < len(after.roles):
+                    new_role_1 = await self.check_new_role(before, after)
+                    await self.check_respected_people_status(new_role_1, after)
+                elif len(before.roles) > len(after.roles):
+                    await self.check_for_removed_role(before, after)
 
     @commands.command(help="Creates leveling roles for this server!", hidden=True)
     @commands.check_any(is_guild_owner(), commands.is_owner())
@@ -251,7 +261,7 @@ class Leveling(commands.Cog):
 
     @commands.group(name="xps", help="Returns your xps!", invoke_without_command=True)
     async def xps(self, ctx: commands.Context):
-        user_xps = self.get_xps(ctx.author)
+        user_xps = await self.get_xps(ctx.author)
         if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in ctx.author.roles:
             await ctx.send(f"{ctx.author.mention} you are a Respected People or you have finished leveling")
         else:
@@ -304,7 +314,7 @@ class Leveling(commands.Cog):
 
     @commands.group(name="level", help="Returns your level", invoke_without_command=True)
     async def level(self, ctx: commands.Context):
-        user_level = self.get_level(ctx.author)
+        user_level = await self.get_level(ctx.author)
         if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in ctx.author.roles:
             await ctx.send(f"{ctx.author.mention} you are a Respected People or you have finished leveling.")
         else:
@@ -352,19 +362,17 @@ class Leveling(commands.Cog):
         await self.set_level(member, int(int(old_level) - int(level)))
         await ctx.send(f"Removed level {level} to {member.mention}")
 
-    async def get_leader_board(self, guild_id, what_to_sort):
-        # {str(guild_id): dict(sorted(self.leveling_data[str(guild_id)].items(), key=lambda items: items[1][how_to_sort], reverse=True))}
+    async def get_leader_board(self, guild_id):
         leader_board1 = await self.bot.pg_conn.fetch("""
         SELECT user_id, level, xps FROM leveling_data
         WHERE guild_id = $1
-        ORDER BY $2 DESC
-        """, guild_id, what_to_sort)
-        # print(leader_board1)
+        ORDER BY xps DESC 
+        """, guild_id)
         return leader_board1
 
     @commands.command(name="leaderboard", aliases=['lb'], help="Returns leaderboard.")
-    async def leader_board(self, ctx, sorting="xps"):
-        leaderboard = await self.get_leader_board(ctx.guild.id, sorting)
+    async def leader_board(self, ctx):
+        leaderboard = await self.get_leader_board(ctx.guild.id)
         msg = ''
         index = 1
         for user_id, level, xps in leaderboard:

@@ -1,5 +1,6 @@
 import datetime
 import os
+from itertools import cycle
 
 import asyncpg
 import discord
@@ -14,6 +15,8 @@ BOT_IS_READY = False
 PREFIX = os.getenv('DEFAULT_PREFIX')
 DELIMITER = os.getenv('DEFAULT_DELIMITER_FOR_ENV')
 TICKET_EMOJI = os.getenv('DEFAULT_TICKET_EMOJI')
+IP_ADDRESS = os.getenv('IP_ADDRESS')
+PORT_NUMBER = os.getenv('PORT_NUMBER')
 
 
 async def get_prefix(bot_1, message):
@@ -74,7 +77,7 @@ async def ping(ctx):
     await ctx.send("Pong!")
 
 for filename in os.listdir('Bot/cogs'):
-    if filename.endswith('.py'):
+    if filename.endswith('.py') and not filename.startswith('_'):
         bot.load_extension(f'Bot.cogs.{filename[:-3]}')
 
 
@@ -100,6 +103,16 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
         raise error
 
 
+@bot.command()
+@commands.is_owner()
+async def reload_all_extensions(ctx):
+    for filename1 in os.listdir('Bot/cogs'):
+        if filename1.endswith('.py'):
+            bot.unload_extension(f'Bot.cogs.{filename1[:-3]}')
+            bot.load_extension(f'Bot.cogs.{filename1[:-3]}')
+    await ctx.send("Reloaded all extensions!")
+
+
 @tasks.loop(seconds=10)
 async def add_guild_to_db():
     await bot.wait_until_ready()
@@ -115,12 +128,39 @@ async def add_guild_to_db():
                 VALUES ($1, $2, $3)
                 """, guild.id, bot.init_cogs, ["None"])
 
+dispatcher = "Bot.cogs.utils.dispatcher"
+bot.load_extension(dispatcher)
+print('loaded dispatcher successfully')
+
+
+@tasks.loop(hours=1)
+async def my_presence_per_day():
+    await bot.wait_until_ready()
+    prefix = next(cycle(bot.prefix_default))
+    status = next(cycle([discord.Status.do_not_disturb, discord.Status.online, discord.Status.idle, discord.Status.dnd]))
+    activity = next(cycle([discord.Game(name=f"OpenCity • Type {prefix}help to get started"),
+                           discord.Streaming(name=f"OpenCity • Type {prefix}help to get started", url="https://www.twitch.tv/opencitybotdiscord"),
+                           discord.Activity(type=discord.ActivityType.listening, name=f"OpenCity • Type {prefix}help to get started"),
+                           discord.Activity(type=discord.ActivityType.watching, name=f"OpenCity • Type {prefix}help to get started")
+                           ]))
+    await bot.change_presence(status=status, activity=activity)
+
 
 # @add_guild_to_db.error
 # async def add_guild_to_db_error(error):
 #     raise error
-
+#
 bot.loop.run_until_complete(connection_for_pg())
+bot.loop.create_task(app.run_task(host=IP_ADDRESS, port=int(PORT_NUMBER)))
+my_presence_per_day.start()
 add_guild_to_db.start()
 
 bot.run(TOKEN)
+
+
+# async def main():
+#     asyncio.get_running_loop().create_task(app.run_task(host=IP_ADDRESS, port=int(PORT_NUMBER)))
+#     asyncio.get_running_loop().create_task(await bot.start(TOKEN))
+#     # asyncio.get_running_loop().create_task(await bot.login(TOKEN))
+#
+# asyncio.run(main())
