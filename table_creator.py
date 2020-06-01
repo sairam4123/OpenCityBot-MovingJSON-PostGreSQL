@@ -15,11 +15,6 @@ async def create_tables():
     application_name text COLLATE pg_catalog."default",
     questions text[] COLLATE pg_catalog."default"
 )
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.application_data
-    OWNER to postgres;
     """)
     await pg_conn.execute("""
     CREATE TABLE public.bank_data
@@ -28,11 +23,6 @@ ALTER TABLE public.application_data
     bank_name text COLLATE pg_catalog."default",
     currency_symbol text COLLATE pg_catalog."default"
 )
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.bank_data
-    OWNER to postgres;
     """)
     await pg_conn.execute("""
     CREATE TABLE public.cogs_data
@@ -41,20 +31,11 @@ ALTER TABLE public.bank_data
     enabled text[] COLLATE pg_catalog."default",
     disabled text[] COLLATE pg_catalog."default",
     CONSTRAINT cogs_data_pk PRIMARY KEY (guild_id)
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.cogs_data
-    OWNER to postgres;
--- Index: cogs_data_guild_id_uindex
-
--- DROP INDEX public.cogs_data_guild_id_uindex;
+);
 
 CREATE UNIQUE INDEX cogs_data_guild_id_uindex
     ON public.cogs_data USING btree
     (guild_id ASC NULLS LAST)
-    TABLESPACE pg_default;
     """)
     await pg_conn.execute("""
     CREATE TABLE public.count_data
@@ -65,17 +46,11 @@ CREATE UNIQUE INDEX cogs_data_guild_id_uindex
     ticket_number integer DEFAULT 0,
     tunnel_number integer DEFAULT 0,
     CONSTRAINT count_data_pk PRIMARY KEY (guild_id)
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.count_data
-    OWNER to postgres;
+);
 
 CREATE UNIQUE INDEX count_data_guild_id_uindex
     ON public.count_data USING btree
     (guild_id ASC NULLS LAST)
-    TABLESPACE pg_default;
     """)
 
     await pg_conn.execute("""
@@ -84,12 +59,7 @@ CREATE UNIQUE INDEX count_data_guild_id_uindex
     guild_id bigint,
     user_id bigint,
     amount bigint DEFAULT 2000
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.economy_data
-    OWNER to postgres;
+);
     """)
 
     await pg_conn.execute("""
@@ -100,32 +70,23 @@ ALTER TABLE public.economy_data
     ticket_id bigint,
     tunnel_id bigint,
     row_id integer DEFAULT 0
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.id_data
-    OWNER to postgres;
+);
 
 CREATE UNIQUE INDEX id_data_report_id_uindex
     ON public.id_data USING btree
-    (report_id ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (report_id ASC NULLS LAST);
 
 CREATE UNIQUE INDEX id_data_suggestion_id_uindex
     ON public.id_data USING btree
-    (suggestion_id ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (suggestion_id ASC NULLS LAST);
 
 CREATE UNIQUE INDEX id_data_ticket_id_uindex
     ON public.id_data USING btree
-    (ticket_id ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (ticket_id ASC NULLS LAST);
 
 CREATE UNIQUE INDEX id_data_tunnel_id_uindex
     ON public.id_data USING btree
-    (tunnel_id ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (tunnel_id ASC NULLS LAST);
     """)
 
     await pg_conn.execute("""
@@ -133,12 +94,7 @@ CREATE UNIQUE INDEX id_data_tunnel_id_uindex
 (
     channel_id bigint,
     user_id bigint
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.join_to_create_data
-    OWNER to postgres;    
+); 
     """)
 
     await pg_conn.execute("""
@@ -149,12 +105,7 @@ ALTER TABLE public.join_to_create_data
     xps integer,
     level integer,
     last_message_time bigint
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.leveling_data
-    OWNER to postgres;
+);
     """)
 
     await pg_conn.execute("""
@@ -163,12 +114,7 @@ ALTER TABLE public.leveling_data
     guild_id bigint NOT NULL,
     prefixes character varying[] COLLATE pg_catalog."default",
     CONSTRAINT prefix_data_pkey PRIMARY KEY (guild_id)
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.prefix_data
-    OWNER to postgres;
+);
     """)
 
     await pg_conn.execute("""
@@ -179,12 +125,7 @@ ALTER TABLE public.prefix_data
     reaction text COLLATE pg_catalog."default",
     role_id bigint,
     message_type text COLLATE pg_catalog."default"
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.reaction_roles_data
-    OWNER to postgres;
+);
     """)
     await pg_conn.execute("""
     CREATE TABLE public.report_data
@@ -201,22 +142,15 @@ ALTER TABLE public.reaction_roles_data
     "reportUser" text COLLATE pg_catalog."default",
     "reportModerator" text COLLATE pg_catalog."default",
     CONSTRAINT report_data_pk PRIMARY KEY ("reportID")
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.report_data
-    OWNER to postgres;
+);
 
 CREATE UNIQUE INDEX report_data_reportid_uindex
     ON public.report_data USING btree
-    ("reportID" ASC NULLS LAST)
-    TABLESPACE pg_default;
+    ("reportID" ASC NULLS LAST);
 
 CREATE UNIQUE INDEX report_data_reportmessageid_uindex
     ON public.report_data USING btree
-    ("reportMessageID" ASC NULLS LAST)
-    TABLESPACE pg_default;  
+    ("reportMessageID" ASC NULLS LAST);
     """)
 
     await pg_conn.execute("""
@@ -234,22 +168,15 @@ CREATE UNIQUE INDEX report_data_reportmessageid_uindex
     "suggestionStatus" text COLLATE pg_catalog."default",
     "suggestionModerator" text COLLATE pg_catalog."default",
     CONSTRAINT suggestion_data_pk PRIMARY KEY ("suggestionID")
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.suggestion_data
-    OWNER to postgres;
+);
 
 CREATE UNIQUE INDEX suggestion_data_suggestionid_uindex
     ON public.suggestion_data USING btree
-    ("suggestionID" ASC NULLS LAST)
-    TABLESPACE pg_default;
+    ("suggestionID" ASC NULLS LAST);
 
 CREATE UNIQUE INDEX suggestion_data_suggestionmessageid_uindex
     ON public.suggestion_data USING btree
-    ("suggestionMessageID" ASC NULLS LAST)
-    TABLESPACE pg_default;
+    ("suggestionMessageID" ASC NULLS LAST);
     """)
     await pg_conn.execute("""
     CREATE TABLE public.tunnel_data
@@ -263,17 +190,11 @@ CREATE UNIQUE INDEX suggestion_data_suggestionmessageid_uindex
     "tunnelStatus" text COLLATE pg_catalog."default",
     "tunnelUser" text COLLATE pg_catalog."default",
     CONSTRAINT tunnel_data_pk PRIMARY KEY ("tunnelID")
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.tunnel_data
-    OWNER to postgres;
+);
 
 CREATE UNIQUE INDEX tunnel_data_tunnelid_uindex
     ON public.tunnel_data USING btree
-    ("tunnelID" ASC NULLS LAST)
-    TABLESPACE pg_default;
+    ("tunnelID" ASC NULLS LAST);
     """)
     await pg_conn.execute("""
     CREATE TABLE public.ticket_data
@@ -287,17 +208,11 @@ CREATE UNIQUE INDEX tunnel_data_tunnelid_uindex
     "ticketStatus" text COLLATE pg_catalog."default",
     "ticketUser" text COLLATE pg_catalog."default",
     CONSTRAINT ticket_data_pk PRIMARY KEY ("ticketID")
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.ticket_data
-    OWNER to postgres;
+);
 
 CREATE UNIQUE INDEX ticket_data_ticketid_uindex
     ON public.ticket_data USING btree
-    ("ticketID" ASC NULLS LAST)
-    TABLESPACE pg_default;
+    ("ticketID" ASC NULLS LAST);
     """)
 
     await pg_conn.execute("""
@@ -312,17 +227,11 @@ CREATE UNIQUE INDEX ticket_data_ticketid_uindex
     "tunnelStatus" text COLLATE pg_catalog."default",
     "tunnelUser" text COLLATE pg_catalog."default",
     CONSTRAINT tunnel_data_pk PRIMARY KEY ("tunnelID")
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.tunnel_data
-    OWNER to postgres;
+);
 
 CREATE UNIQUE INDEX tunnel_data_tunnelid_uindex
     ON public.tunnel_data USING btree
-    ("tunnelID" ASC NULLS LAST)
-    TABLESPACE pg_default;
+    ("tunnelID" ASC NULLS LAST);
     """)
 
     await pg_conn.execute("""
@@ -331,12 +240,7 @@ CREATE UNIQUE INDEX tunnel_data_tunnelid_uindex
     guild_id bigint,
     voice_channel_id bigint,
     text_channel_id bigint
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.voice_text_data
-    OWNER to postgres;
+);
     """)
     print("created everything")
 
