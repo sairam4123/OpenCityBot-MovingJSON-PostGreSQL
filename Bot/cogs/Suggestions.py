@@ -81,26 +81,26 @@ class Suggestions(commands.Cog):
 
     @suggestion.command(name="approve", help="Approves a suggestion.")
     async def suggestion_approve(self, ctx: commands.Context, suggestion_id: int, *, reason: Optional[str] = None):
-        suggestion = [await self.bot.pg_conn.fetchrow("""
+        suggestion = await self.bot.pg_conn.fetchrow("""
         SELECT * FROM suggestion_data
         WHERE "suggestionID" = $1
-        """, suggestion_id)]
+        """, suggestion_id)
         embed = discord.Embed()
-        author = ctx.guild.get_member(int(suggestion[0]['suggestionAuthor'].split(' ')[-1].strip('( )')))
+        author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
-        embed.title = suggestion[0]['suggestionTitle'] + " Approved"
+        embed.title = suggestion['suggestionTitle'] + " Approved"
         embed.description = (
-                    f"**Suggestion**: {suggestion[0]['suggestionContent']}\n"
+                    f"**Suggestion**: {suggestion['suggestionContent']}\n"
                     f"**Suggested by**: {author.mention}"
         )
         if reason:
             embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_green()
-        embed.set_footer(text=f"SuggestionID: {suggestion[0]['suggestionID']} | {suggestion[0]['suggestionTime']}")
-        suggestion_guild = self.bot.get_guild(suggestion[0]['suggestionGuildID'])
-        suggestion_channel = suggestion_guild.get_channel(suggestion[0]['suggestionChannelID'])
-        suggestion_message = await suggestion_channel.fetch_message(suggestion[0]["suggestionMessageID"])
+        embed.set_footer(text=f"SuggestionID: {suggestion['suggestionID']} | {suggestion['suggestionTime']}")
+        suggestion_guild = self.bot.get_guild(suggestion['suggestionGuildID'])
+        suggestion_channel = suggestion_guild.get_channel(suggestion['suggestionChannelID'])
+        suggestion_message = await suggestion_channel.fetch_message(suggestion["suggestionMessageID"])
         await suggestion_message.edit(embed=embed)
         await self.bot.pg_conn.execute("""
         UPDATE suggestion_data 
@@ -112,26 +112,26 @@ class Suggestions(commands.Cog):
 
     @suggestion.command(name="deny", help="Denies a suggestion.")
     async def suggestion_deny(self, ctx: commands.Context, suggestion_id: int, *, reason: Optional[str] = None):
-        suggestion = [self.bot.pg_conn.execute("""
+        suggestion = self.bot.pg_conn.fetchrow("""
                 SELECT * FROM suggestion_data
                 WHERE "suggestionID" = $1
-                """, suggestion_id)]
+                """, suggestion_id)
         embed = discord.Embed()
-        author = ctx.guild.get_member(int(suggestion[0]['suggestionAuthor'].split(' ')[-1].strip('( )')))
+        author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
-        embed.title = suggestion[0]['suggestionTitle'] + " Denied"
+        embed.title = suggestion['suggestionTitle'] + " Denied"
         embed.description = (
-            f"**Suggestion**: {suggestion[0]['suggestionContent']}\n"
+            f"**Suggestion**: {suggestion['suggestionContent']}\n"
             f"**Suggested by**: {author.mention}"
         )
         if reason:
             embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.blue()
-        embed.set_footer(text=f"SuggestionID: {suggestion[0]['suggestionID']} | {suggestion[0]['suggestionTime']}")
-        suggestion_guild = self.bot.get_guild(suggestion[0]['suggestionGuildID'])
-        suggestion_channel = suggestion_guild.get_channel(suggestion[0]['suggestionChannelID'])
-        suggestion_message = await suggestion_channel.fetch_message(suggestion[0]["suggestionMessageID"])
+        embed.set_footer(text=f"SuggestionID: {suggestion['suggestionID']} | {suggestion['suggestionTime']}")
+        suggestion_guild = self.bot.get_guild(suggestion['suggestionGuildID'])
+        suggestion_channel = suggestion_guild.get_channel(suggestion['suggestionChannelID'])
+        suggestion_message = await suggestion_channel.fetch_message(suggestion["suggestionMessageID"])
         await suggestion_message.edit(embed=embed)
         await self.bot.pg_conn.execute("""
         UPDATE suggestion_data 
@@ -143,26 +143,26 @@ class Suggestions(commands.Cog):
 
     @suggestion.command(name="consider", help="Marks a suggestion as considered.")
     async def suggestion_consider(self, ctx: commands.Context, suggestion_id: int, *, reason: Optional[str] = None):
-        suggestion = [self.bot.pg_conn.execute("""
+        suggestion = self.bot.pg_conn.fetchrow("""
                     SELECT * FROM suggestion_data
                     WHERE "suggestionID" = $1
-                    """, suggestion_id)]
+                    """, suggestion_id)
         embed = discord.Embed()
-        author = ctx.guild.get_member(int(suggestion[0]['suggestionAuthor'].split(' ')[-1].strip('( )')))
+        author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
         embed.title = suggestion[0]['suggestionTitle'] + " Considered"
         embed.description = (
-                f"**Suggestion**: {suggestion[0]['suggestionContent']}\n"
+                f"**Suggestion**: {suggestion['suggestionContent']}\n"
                 f"**Suggested by**: {author.mention}"
          )
         if reason:
             embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_red()
-        embed.set_footer(text=f"SuggestionID: {suggestion[0]['suggestionID']} | {suggestion[0]['suggestionTime']}")
-        suggestion_guild = self.bot.get_guild(suggestion[0]['suggestionGuildID'])
-        suggestion_channel = suggestion_guild.get_channel(suggestion[0]['suggestionChannelID'])
-        suggestion_message = await suggestion_channel.fetch_message(suggestion[0]["suggestionMessageID"])
+        embed.set_footer(text=f"SuggestionID: {suggestion['suggestionID']} | {suggestion[0]['suggestionTime']}")
+        suggestion_guild = self.bot.get_guild(suggestion['suggestionGuildID'])
+        suggestion_channel = suggestion_guild.get_channel(suggestion['suggestionChannelID'])
+        suggestion_message = await suggestion_channel.fetch_message(suggestion["suggestionMessageID"])
         await suggestion_message.edit(embed=embed)
         await self.bot.pg_conn.execute("""
             UPDATE suggestion_data 
@@ -174,26 +174,26 @@ class Suggestions(commands.Cog):
 
     @suggestion.command(name="implemented", help="Marks a suggestion as already implemented.")
     async def suggestion_implemented(self, ctx: commands.Context, suggestion_id: int, *, reason: Optional[str] = None):
-        suggestion = [await self.bot.pg_conn.fetchrow("""
+        suggestion = await self.bot.pg_conn.fetchrow("""
                SELECT * FROM suggestion_data
                WHERE "suggestionID" = $1
-               """, suggestion_id)]
+               """, suggestion_id)
         embed = discord.Embed()
-        author = ctx.guild.get_member(int(suggestion[0]['suggestionAuthor'].split(' ')[-1].strip('( )')))
+        author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
-        embed.title = suggestion[0]['suggestionTitle'] + " Implemented"
+        embed.title = suggestion['suggestionTitle'] + " Implemented"
         embed.description = (
-            f"**Suggestion**: {suggestion[0]['suggestionContent']}\n"
+            f"**Suggestion**: {suggestion['suggestionContent']}\n"
             f"**Suggested by**: {author.mention}"
         )
         if reason:
             embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_green()
-        embed.set_footer(text=f"SuggestionID: {suggestion[0]['suggestionID']} | {suggestion[0]['suggestionTime']}")
-        suggestion_guild = self.bot.get_guild(suggestion[0]['suggestionGuildID'])
-        suggestion_channel = suggestion_guild.get_channel(suggestion[0]['suggestionChannelID'])
-        suggestion_message = await suggestion_channel.fetch_message(suggestion[0]["suggestionMessageID"])
+        embed.set_footer(text=f"SuggestionID: {suggestion['suggestionID']} | {suggestion['suggestionTime']}")
+        suggestion_guild = self.bot.get_guild(suggestion['suggestionGuildID'])
+        suggestion_channel = suggestion_guild.get_channel(suggestion['suggestionChannelID'])
+        suggestion_message = await suggestion_channel.fetch_message(suggestion["suggestionMessageID"])
         await suggestion_message.edit(embed=embed)
         await self.bot.pg_conn.execute("""
                UPDATE suggestion_data 
