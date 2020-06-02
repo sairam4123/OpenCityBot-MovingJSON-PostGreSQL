@@ -4,6 +4,7 @@ from typing import List, Mapping, Optional, Union
 import discord
 from discord.ext import commands
 
+from Bot.cogs.utils.flag_check import get_flag_and_voice_server_for_guild
 from Bot.cogs.utils.timeformat_bot import convert_utc_into_ist
 
 
@@ -207,7 +208,7 @@ class Information(commands.Cog):
                         value=f"<:online:713029272125833337> {online_members} \t <:invisible:713029271391830109> {offline_members} \n <:idle:713029270976331797> {idle_members} \t <:dnd:713029270489792533> {dnd_members} \n \n :robot: {bots} \t <:members:716546232570347560> {humans} \n \n Total: {len(guild.members)}")
         embed.add_field(name="Roles", value=role_mention_str, inline=False)
         embed.add_field(name="Guild Icon URL", value="This server has no icon url" if not bool(guild.icon_url) else f"[Guild Icon URL]({guild.icon_url})")
-        embed.add_field(name="Voice Region", value=f":flag_{str(guild.region)[:2]}: {str(guild.region).capitalize()}")
+        embed.add_field(name="Voice Region", value=get_flag_and_voice_server_for_guild(str(guild.region)))
         embed.add_field(name="Ban Count", value=f"<:ban:714168539975778324> {len(await guild.bans())}")
         embed.set_thumbnail(url=guild.icon_url)
         await ctx.send(embed=embed)

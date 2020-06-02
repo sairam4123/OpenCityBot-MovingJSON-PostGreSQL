@@ -16,8 +16,6 @@ class dispatcher(commands.Cog):
                 if entry.target == member:
                     self.bot.dispatch('member_kick', member)
                     return
-        if member.guild.fetch_ban(member):
-            return
         self.bot.dispatch('member_leave', member)
 
     @commands.Cog.listener()
