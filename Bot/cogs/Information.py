@@ -91,7 +91,7 @@ class Information(commands.Cog):
     async def cog_check(self, ctx):
         if ctx.channel.type == discord.ChannelType.private:
             return True
-        enabled = await self.bot.pg_conn.fetchrow("""
+        enabled = await self.bot.pg_conn.fetchval("""
             SELECT enabled FROM cogs_data
             WHERE guild_id = $1
             """, ctx.guild.id)
