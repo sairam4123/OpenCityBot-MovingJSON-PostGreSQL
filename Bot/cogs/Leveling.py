@@ -1,6 +1,6 @@
 import random
 import time
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 from discord.ext import commands
@@ -54,6 +54,16 @@ class Leveling(commands.Cog):
             INSERT INTO leveling_data (guild_id, user_id, level, xps, last_message_time) VALUES ($1, $2, $3, $4, $5)
             """, member.guild.id, member.id, 0, 0, 0)
 
+    async def get_destination_for_level_up_messages(self, message: discord.Message) -> discord.TextChannel:
+        destination_channel_id = await self.bot.pg_conn.fetchval("""
+        SELECT channel_id FROM leveling_message_destination_data
+        WHERE guild_id = $1
+        """, message.guild.id)
+        if not destination_channel_id:
+            return message.channel
+        destination = discord.utils.get(message.guild.text_channels, id=destination_channel_id)
+        return destination
+
     async def get_level(self, member: discord.Member):
         return await self.bot.pg_conn.fetchval("""
         SELECT level FROM leveling_data
@@ -102,18 +112,18 @@ class Leveling(commands.Cog):
         return old_user_level, new_user_level
 
     async def send_level_up_message(self, member: discord.Member, message: discord.Message, old_level, new_level):
+        await self.bot.pg_conn.execute("""
+                    UPDATE leveling_data
+                    SET level = $3
+                    WHERE guild_id = $1 AND user_id = $2
+                    """, member.guild.id, member.id, new_level)
         if new_level > old_level:
-            await message.channel.send(f"{member.mention} "
-                                       f"You've leveled up to level `{new_level}` hurray!")
-            await self.bot.pg_conn.execute("""
-            UPDATE leveling_data
-            SET level = $3
-            WHERE guild_id = $1 AND user_id = $2
-            """, member.guild.id, member.id, new_level)
+            level_up_message_destination = await self.get_destination_for_level_up_messages(message)
+            await level_up_message_destination.send(f"{member.mention} "
+                                                    f"You've leveled up to level `{new_level}` hurray!")
 
     async def update_xps(self, member: discord.Member, message: discord.Message):
-        if (int(time.time()) - int(await self.get_last_message_time(member))) > 1 and not str(message.content).startswith(
-                ('!', '?', ';', ':', 'o!', 'o?')):
+        if (int(time.time()) - int(await self.get_last_message_time(member))) > 1 and not str(message.content).startswith(tuple(await self.bot.get_prefix(message))):
             await self.bot.pg_conn.execute("""
             UPDATE leveling_data
             SET xps = $3,
@@ -121,27 +131,27 @@ class Leveling(commands.Cog):
             WHERE guild_id = $1 AND user_id = $2
             """, member.guild.id, member.id, int(int(await self.get_xps(member)) + int(random.randrange(5, 25, 5))), time.time())
 
-    async def return_user_category(self, message):
+    async def return_user_category(self, member: discord.Member):
         user_category = None
         for i in self.leveling_roles:
-            if discord.utils.find(lambda r: r.name == self.leveling_prefix[0] + self.leveling_roles[i][0], message.guild.roles) in message.author.roles:
+            if discord.utils.find(lambda r: r.name == self.leveling_prefix[0] + self.leveling_roles[i][0], member.guild.roles) in member.roles:
                 user_category = i
                 break
         if user_category is None:
             try:
-                await message.author.add_roles(discord.utils.find(lambda r: r.name == self.leveling_prefix[0] + self.leveling_roles['citizen'][0], message.guild.roles))
+                await member.add_roles(discord.utils.find(lambda r: r.name == self.leveling_prefix[0] + self.leveling_roles['citizen'][0], member.guild.roles))
             except AttributeError:
                 user_category = None
             else:
                 user_category = 'citizen'
         return user_category
 
-    async def give_roles_according_to_level(self, user_category, message):
+    async def give_roles_according_to_level(self, user_category, member: discord.Member):
         if user_category is not None:
-            user_level = await self.get_level(message.author)
-            if discord.utils.find(lambda r: r.name == self.leveling_prefix[user_level] + self.leveling_roles[user_category][0], message.guild.roles) not in message.author.roles:
-                await message.author.add_roles(
-                    discord.utils.find(lambda r: r.name == self.leveling_prefix[user_level] + self.leveling_roles[user_category][0], message.guild.roles))
+            user_level = await self.get_level(member)
+            if discord.utils.find(lambda r: r.name == self.leveling_prefix[user_level] + self.leveling_roles[user_category][0], member.guild.roles) not in member.roles:
+                await member.add_roles(
+                    discord.utils.find(lambda r: r.name == self.leveling_prefix[user_level] + self.leveling_roles[user_category][0], member.guild.roles))
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -155,11 +165,11 @@ class Leveling(commands.Cog):
                     return
                 await self.update_data(message.author)
                 if discord.utils.find(lambda r: r.name == 'Respected People', message.guild.roles) not in message.author.roles and message.author.bot is False:
-                    user_category_1 = await self.return_user_category(message)
+                    user_category_1 = await self.return_user_category(message.author)
                     await self.update_xps(message.author, message)
                     old_level, new_level = await self.update_level(message.author)
+                    await self.give_roles_according_to_level(user_category_1, message.author)
                     await self.send_level_up_message(message.author, message, old_level, new_level)
-                    await self.give_roles_according_to_level(user_category_1, message)
 
     async def check_new_role(self, before, after):
         new_role = next(role for role in after.roles if role not in before.roles)
@@ -389,6 +399,14 @@ class Leveling(commands.Cog):
         embed.set_author(name=ctx.me.name, icon_url=ctx.me.avatar_url)
         embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def set_level_up_message_channel(self, ctx, channel: discord.TextChannel):
+        await self.bot.pg_conn.execute("""
+        INSERT INTO leveling_message_destination_data
+        VALUES ($1, $2)
+        """, ctx.guild.id, channel.id)
+        await ctx.send(f"Set the level up message channel to {channel.mention}")
 
 
 def setup(bot):
