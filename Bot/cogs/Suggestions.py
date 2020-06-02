@@ -39,9 +39,9 @@ class Suggestions(commands.Cog):
         """, ctx.guild.id)
         if not suggestion_id:
             await self.bot.pg_conn.execute("""
-            INSERT INTO id_data (suggestion_id)
-            VALUES ($1)
-            """, self.bot.start_number)
+            INSERT INTO id_data (suggestion_id, row_id)
+            VALUES ($1, $2)
+            """, self.bot.start_number, 1)
         if not suggestion_number:
             await self.bot.pg_conn.execute("""
             INSERT INTO count_data (guild_id, suggestion_number)
