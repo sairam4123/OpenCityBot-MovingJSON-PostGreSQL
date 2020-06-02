@@ -120,7 +120,7 @@ class Configuration(commands.Cog):
             except ValueError:
                 pass
             enabled.append(plugin_to_enable)
-            await ctx.send("Plugin enabled successfully")
+            # await ctx.send("Plugin enabled successfully")
             try:
                 if enabled:
                     enabled.remove("None")
@@ -138,6 +138,7 @@ class Configuration(commands.Cog):
                 disabled = $3
             WHERE guild_id = $1
         """, ctx.guild.id, enabled, disabled)
+        await ctx.send("Plugin enabled successfully")
 
     @plugin.command(name="disable", help="Disables given plugin!", aliases=['-'])
     @commands.check_any(is_guild_owner(), commands.is_owner())
@@ -159,7 +160,6 @@ class Configuration(commands.Cog):
             except ValueError:
                 pass
             disabled.append(plugin_to_disable)
-            await ctx.send("Plugin disabled successfully")
             try:
                 if disabled:
                     disabled.remove("None")
@@ -177,6 +177,7 @@ class Configuration(commands.Cog):
                 disabled = $3
             WHERE guild_id = $1
             """, ctx.guild.id, enabled, disabled)
+        await ctx.send("Plugin disabled successfully")
 
 
 def setup(bot):
