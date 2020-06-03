@@ -418,7 +418,7 @@ class Leveling(commands.Cog):
         """, ctx.guild.id, channel.id)
         await ctx.send(f"Set the level up message channel to {channel.mention}")
 
-    @commands.group(name="level_up_message_status")
+    @commands.group(name="level_up_message_status", help="Toggles the enabling and disabling of level up messages.")
     async def toggle_level_up_message(self, ctx, status):
         if status == "enabled":
             await self.bot.pg_conn.execute("""
