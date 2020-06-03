@@ -2,7 +2,7 @@ from discord.ext import commands
 
 
 def is_guild_owner():
-    async def predicate(ctx):
+    async def predicate(ctx) -> bool:
         try:
             return ctx.author == ctx.guild.owner
         except AttributeError:

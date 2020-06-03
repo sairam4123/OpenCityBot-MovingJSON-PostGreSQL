@@ -1,7 +1,9 @@
+from typing import List
+
 import discord
 
 
-def permission_builder(perms_list):
+def permission_builder(perms_list: List[List[int]]) -> List[List[discord.Permissions]]:
     discord_perms_list_1 = []
     for i in range(len(perms_list)):
         perms_list_1 = perms_list[i]
