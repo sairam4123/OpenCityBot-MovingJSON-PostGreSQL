@@ -1,4 +1,5 @@
 import datetime
+from typing import List, Union
 
 
 def indian_standard_time_now() -> List[Union[str, datetime.datetime, int]]:
