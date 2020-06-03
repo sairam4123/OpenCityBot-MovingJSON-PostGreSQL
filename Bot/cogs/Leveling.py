@@ -1,6 +1,6 @@
 import random
 import time
-from typing import Optional, Union
+from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -360,7 +360,7 @@ class Leveling(commands.Cog):
     @commands.check_any(is_guild_owner(), commands.is_owner())
     async def level_add(self, ctx: commands.Context, member: Optional[discord.Member] = None, level=0):
         member = ctx.author if member is None else member
-        old_level = await self.get_xps(member)
+        old_level = await self.get_level(member)
         await self.set_level(member, int(int(old_level) + int(level)))
         await ctx.send(f"Added level {level} to {member.mention}")
 
@@ -368,7 +368,7 @@ class Leveling(commands.Cog):
     @commands.check_any(is_guild_owner(), commands.is_owner())
     async def level_remove(self, ctx: commands.Context, member: Optional[discord.Member] = None, level=0):
         member = ctx.author if member is None else member
-        old_level = await self.get_xps(member)
+        old_level = await self.get_level(member)
         await self.set_level(member, int(int(old_level) - int(level)))
         await ctx.send(f"Removed level {level} to {member.mention}")
 
