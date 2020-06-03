@@ -1,9 +1,13 @@
 import binascii
+import io
 import os
 from typing import Optional
 
-import aiohttp
+import discord
+from PIL import Image
 from discord.ext import commands
+
+from Bot.cogs.utils.color_builder import hex_to_rgb
 
 
 class Utils(commands.Cog):
@@ -29,12 +33,13 @@ class Utils(commands.Cog):
 
     @commands.command()
     async def color(self, ctx, color: Optional[str]):
-        color = color if color else self.random_color()
-        header = {'Application': "text/json"}
-        async with aiohttp.ClientSession() as session:
-            async with session.get('https://www.color-hex.com/color/' + f'{color}') as request:
-                json = await request.json()
-                print(json)
+        color_1 = color if color else self.random_color()
+        image = Image.new("RGB", (500, 500), tuple(hex_to_rgb(color_1)))
+        _file_ = io.BytesIO()
+        image.save(_file_, "PNG")
+        _file_.seek(0)
+        embed = discord.Embed(title="Color", description=f"Hex code: `{color}`", image=f"attachment://color.png")
+        await ctx.send(embed=embed, file=discord.File(_file_, "color.png"))
 
 
 def setup(bot):
