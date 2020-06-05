@@ -4,8 +4,8 @@ from typing import List, Mapping, Optional, Union
 import discord
 from discord.ext import commands
 
-from Bot.cogs.utils.flag_check import get_flag_and_voice_server_for_guild
-from Bot.cogs.utils.timeformat_bot import convert_utc_into_ist
+from .utils.flag_check import get_flag_and_voice_server_for_guild
+from .utils.timeformat_bot import convert_utc_into_ist
 
 
 class MyHelpCommand(commands.HelpCommand):

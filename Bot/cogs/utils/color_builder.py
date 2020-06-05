@@ -13,8 +13,7 @@ def rgb_to_hex(rgb: List[int]) -> str:
     """ [255,255,255] -> "#FFFFFF" """
     # Components need to be integers for hex to make sense
     rgb = [int(x) for x in rgb]
-    return "#" + "".join(["0{0:x}".format(v) if v < 16 else
-                          "{0:x}".format(v) for v in rgb])
+    return "#" + "".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in rgb])
 
 
 def color_dict(gradient: List[List[int]]) -> Dict[str, List[Union[str, int]]]:

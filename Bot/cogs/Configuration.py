@@ -3,7 +3,7 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
-from Bot.cogs.utils.checks import is_guild_owner
+from .utils.checks import is_guild_owner
 
 
 class Configuration(commands.Cog):

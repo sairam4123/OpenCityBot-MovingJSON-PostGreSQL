@@ -4,10 +4,8 @@ from itertools import cycle
 
 import asyncpg
 import discord
-import click
 from discord.ext import commands, tasks
 from quart import Quart
-
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
@@ -77,7 +75,7 @@ async def on_ready():
 
 for filename in os.listdir('Bot/cogs'):
     if filename.endswith('.py') and not filename.startswith('_'):
-        bot.load_extension(f'Bot.cogs.{filename[:-3]}')
+        bot.load_extension(f'development.Bot.cogs.{filename[:-3]}')
 
 
 @bot.event
@@ -127,7 +125,8 @@ async def add_guild_to_db():
                 VALUES ($1, $2, $3)
                 """, guild.id, bot.init_cogs, ["None"])
 
-dispatcher = "Bot.cogs.utils.dispatcher"
+
+dispatcher = "development.Bot.cogs.utils.dispatcher"
 bot.load_extension(dispatcher)
 print('loaded dispatcher successfully')
 

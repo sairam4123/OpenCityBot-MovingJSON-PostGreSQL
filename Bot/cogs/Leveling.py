@@ -5,10 +5,10 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
-from Bot.cogs.utils.checks import is_guild_owner
-from Bot.cogs.utils.color_builder import color_dict_to_discord_color_list
-from Bot.cogs.utils.numbers import make_ordinal
-from Bot.cogs.utils.permision_builder import permission_builder
+from .utils.checks import is_guild_owner
+from .utils.color_builder import color_dict_to_discord_color_list
+from .utils.numbers import make_ordinal
+from .utils.permision_builder import permission_builder
 
 
 class Leveling(commands.Cog):
