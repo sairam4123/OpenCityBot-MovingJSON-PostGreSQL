@@ -16,10 +16,7 @@ class Moderation(commands.Cog):
             SELECT enabled FROM cogs_data
             WHERE guild_id = $1
             """, ctx.guild.id)
-        print(enabled)
-        print(f"")
         if f"Bot.cogs.{self.qualified_name}" in enabled:
-            print(f"{self.qualified_name}")
             return True
         return False
 
