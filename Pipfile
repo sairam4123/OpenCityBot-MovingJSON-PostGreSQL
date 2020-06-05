@@ -8,9 +8,10 @@ verify_ssl = true
 [packages]
 asyncpg = "*"
 emoji = "*"
-#discord = {py = "*"}
 quart = "*"
 discord-py = {extras = ["voice"],git = "https://github.com/Rapptz/discord.py",ref = "master"}
+psutil = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.8"
