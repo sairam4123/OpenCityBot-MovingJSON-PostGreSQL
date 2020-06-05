@@ -1,4 +1,4 @@
-def make_ordinal(n):
+def make_ordinal(n: int) -> str:
     """
     Convert an integer into its ordinal representation::
 

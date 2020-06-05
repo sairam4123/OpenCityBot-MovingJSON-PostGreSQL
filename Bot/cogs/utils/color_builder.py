@@ -1,21 +1,22 @@
+from typing import Dict, List, Union
+
 import discord
 
 
-def hex_to_rgb(hex1):
+def hex_to_rgb(hex1: str) -> List[int]:
     """ "#FFFFFF" -> [255,255,255] """
     # Pass 16 to the integer function for change of base
     return [int(hex1[i:i + 2], 16) for i in range(1, 6, 2)]
 
 
-def rgb_to_hex(rgb):
+def rgb_to_hex(rgb: List[int]) -> str:
     """ [255,255,255] -> "#FFFFFF" """
     # Components need to be integers for hex to make sense
     rgb = [int(x) for x in rgb]
-    return "#" + "".join(["0{0:x}".format(v) if v < 16 else
-                          "{0:x}".format(v) for v in rgb])
+    return "#" + "".join(["0{0:x}".format(v) if v < 16 else "{0:x}".format(v) for v in rgb])
 
 
-def color_dict(gradient):
+def color_dict(gradient: List[List[int]]) -> Dict[str, List[Union[str, int]]]:
     """ Takes in a list of RGB sub-lists and returns dictionary of
     colors in RGB and hex form for use in a graphing function
     defined later on """
@@ -34,7 +35,7 @@ def color_dict(gradient):
 # 	return list_of_rgb_tuples
 
 
-def linear_gradient(start_hex, finish_hex="#FFFFFF", n=11):
+def linear_gradient(start_hex: str, finish_hex: str = "#FFFFFF", n: int = 11) -> color_dict:
     """ returns a gradient list of (n) colors between
     two hex colors. start_hex and finish_hex
     should be the full six-digit color string,
@@ -57,7 +58,7 @@ def linear_gradient(start_hex, finish_hex="#FFFFFF", n=11):
     return color_dict(rgb_list)
 
 
-def color_dict_to_discord_color_list(color_dict1):
+def color_dict_to_discord_color_list(color_dict1: Dict[str, List[str]]) -> List[List[discord.Colour]]:
     hexes_list = [linear_gradient(color_dict1[color][0], color_dict1[color][1])["hex"] for color in color_dict1]
     # print(hexes)
     rgb_list = [[hex_to_rgb(hex1) for hex1 in hexes] for hexes in hexes_list]
