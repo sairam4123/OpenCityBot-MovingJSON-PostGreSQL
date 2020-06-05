@@ -1,10 +1,17 @@
 import datetime
+import platform
+import sys
 from typing import List, Mapping, Optional, Union
 
 import discord
-from Bot.cogs.utils.flag_check import get_flag_and_voice_server_for_guild
-from Bot.cogs.utils.timeformat_bot import convert_utc_into_ist
+import psutil
 from discord.ext import commands
+
+from .utils.flag_check import get_flag_and_voice_server_for_guild
+from .utils.roles_string import role_string
+from .utils.sizer import get_size
+from .utils.status_discord import get_status_of
+from .utils.timeformat_bot import convert_utc_into_ist, datetime_to_seconds, format_duration
 
 
 class MyHelpCommand(commands.HelpCommand):
@@ -131,19 +138,57 @@ class Information(commands.Cog):
     async def info_user(self, ctx: commands.Context, member: discord.Member = None):
         member = ctx.author if member is None else member
 
+        device = "<:android:718485581142687774> Phone" if member.is_on_mobile() else "<:windows:718485580819726366> Desktop"
+        status = get_status_of(member)
+
         embed = discord.Embed()
         embed.set_author(name=member.display_name, icon_url=member.avatar_url)
         embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
         embed.title = f"Info of {member.display_name}"
         embed.add_field(name="Name", value=member.display_name)
         embed.add_field(name="ID", value=member.id)
-        embed.add_field(name="Created at", value=convert_utc_into_ist(member.created_at)[1])
-        embed.add_field(name="Joined at", value=convert_utc_into_ist(member.joined_at)[1])
-        embed.add_field(name="Roles", value="".join(list(reversed([role.mention for role in member.roles if not role.mention == f'<@&{member.guild.id}>']))), inline=False)
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(member.created_at)[1]} \n {format_duration(datetime_to_seconds(member.created_at))} ago", inline=False)
+        embed.add_field(name="Joined at", value=f"{convert_utc_into_ist(member.joined_at)[1]} \n {format_duration(datetime_to_seconds(member.joined_at))} ago")
+        embed.add_field(name="Roles", value=role_string(list(reversed(member.roles[1:]))), inline=False)
         embed.add_field(name="Avatar URL", value=f"[Avatar URL]({member.avatar_url})")
+        embed.add_field(name="Device", value=f"{device}")
+        embed.add_field(name="Status", value=f"{status}")
         embed.set_thumbnail(url=member.avatar_url)
 
         await ctx.send(embed=embed)
+
+    @info.command(help="Gives the info of bot.", name="bot", aliases=['b'])
+    async def info_bot(self, ctx):
+        appinfo = await self.bot.application_info()
+
+        bot_owners = ""
+        if appinfo.team is None:
+            bot_owner = await self.bot.fetch_user(self.bot.owner_id)
+            bot_owners = "`" + bot_owner.display_name + "#" + bot_owner.discriminator + "`"
+        else:
+            for bot_owner_id in self.bot.owner_ids:
+                bot_owner = await self.bot.fetch_user(bot_owner_id)
+                bot_owners += " `" + bot_owner.display_name + "#" + bot_owner.discriminator + "`"
+
+        embed = discord.Embed()
+        embed.set_author(name=ctx.me.display_name, icon_url=ctx.me.avatar_url)
+        embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
+        embed.title = f"Info of Me"
+        embed.add_field(name="Python version", value=sys.version.split(' ')[0])
+        embed.add_field(name="Discord.py version", value=discord.__version__)
+        embed.add_field(name="Servers count", value=f"{len(self.bot.guilds)}")
+        embed.add_field(name="Users count", value=f"{len(self.bot.users)}")
+        embed.add_field(name="Bot Owner(s)", value=bot_owners, inline=False)
+        embed.add_field(name="CPU Usage", value=f"`{psutil.cpu_percent()}%`")
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(self.bot.user.created_at)[1]} \n {format_duration(datetime_to_seconds(self.bot.user.created_at))} ago")
+        embed.add_field(name="Memory or RAM Usage", value=f"`{psutil.virtual_memory().percent}%`")
+        embed.add_field(name="Network Sent", value=f"`{get_size(psutil.net_io_counters().bytes_sent)}`")
+        embed.add_field(name="Network Received", value=f"`{get_size(psutil.net_io_counters().bytes_recv)}`")
+        embed.add_field(name="Operating System", value=f"`{platform.uname().system} {platform.uname().version}`")
+
+        await ctx.send(embed=embed)
+        # embed.add_field(name="Avatar URL", value=f"[Avatar URL]({member.avatar_url})")
+        # embed.set_thumbnail(url=member.avatar_url)
 
     @info.command(help="Gives the info of a guild.", name="guild", aliases=['g', 's', 'server'])
     async def info_guild(self, ctx: commands.Context):
@@ -184,23 +229,14 @@ class Information(commands.Cog):
             if isinstance(channel, discord.CategoryChannel):
                 category_channels += 1
 
-        value_char = 0
-        role_mention_str = ""
-        for role_index, role in enumerate(list(reversed(guild.roles))):
-            if role.mention != f"<@&{guild.id}>":
-                if not value_char >= 1000:
-                    value_char += len(role.mention)
-                    role_mention_str += f"{role.mention}"
-                else:
-                    role_mention_str += f" (+{len(guild.roles[role_index:])} Roles)"
-                    break
+        role_mention_str = role_string(guild.roles[1:])
         embed = discord.Embed()
         embed.set_author(name=guild.name, icon_url=guild.icon_url)
         embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
         embed.title = f"Info of {guild.name}"
         embed.add_field(name="Name", value=guild.name)
         embed.add_field(name="ID", value=guild.id)
-        embed.add_field(name="Created at", value=convert_utc_into_ist(guild.created_at)[1], inline=False)
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(guild.created_at)[1]} \n {format_duration(datetime_to_seconds(guild.created_at))} ago", inline=False)
         embed.add_field(name="Channels available",
                         value=f"<:channel:713041608379203687> {len(guild.text_channels)} \t <:voice:713041608312094731> {len(guild.voice_channels)}\n <:news:713041608559427624> {news_channels} \t <:store_tag1:716660817487200338> {store_channels} \n <:nsfw:716664108392644708> {nsfw_channels} \t <:category1:714347844307517514> {category_channels} \n \n Total: {len(guild.channels)}")
         embed.add_field(name="Members count with status",
@@ -241,7 +277,7 @@ class Information(commands.Cog):
         embed.title = f"Info of {role.name}"
         embed.add_field(name="Name", value=role.name)
         embed.add_field(name="ID", value=role.id)
-        embed.add_field(name="Created at", value=convert_utc_into_ist(role.created_at)[1], inline=False)
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(role.created_at)[1]} \n {format_duration(datetime_to_seconds(role.created_at))} ago", inline=False)
         embed.add_field(name="Hoisted",
                         value=role.hoist)
         embed.add_field(name="Mentionable",
@@ -265,7 +301,7 @@ class Information(commands.Cog):
         embed.title = f"Info of {channel.name}"
         embed.add_field(name="Name", value=channel.name)
         embed.add_field(name="ID", value=channel.id)
-        embed.add_field(name="Created at", value=convert_utc_into_ist(channel.created_at)[1], inline=False)
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(channel.created_at)[1]} \n {format_duration(datetime_to_seconds(channel.created_at))} ago", inline=False)
         if channel.type == discord.ChannelType.text:
             embed.add_field(name="NSFW", value=channel.nsfw)
         embed.add_field(name="Type",

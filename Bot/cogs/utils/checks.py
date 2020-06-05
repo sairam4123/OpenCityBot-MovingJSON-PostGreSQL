@@ -7,5 +7,4 @@ def is_guild_owner():
             return ctx.author == ctx.guild.owner
         except AttributeError:
             return False
-
     return commands.check(predicate)
