@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 from itertools import cycle
 
 import asyncpg
@@ -60,6 +61,8 @@ async def connection_for_pg():
 @bot.event
 async def on_ready():
     global BOT_IS_READY
+    random_user = random.choice(bot.users)
+    await bot.is_owner(random_user)
     for guild_index, guild in enumerate(bot.guilds):
         print(
             f'{bot.user} is connected to the following guild:\n'
@@ -70,8 +73,7 @@ async def on_ready():
         print(f'Guild Members of {guild.name} are:\n - {members}')
         if guild_index != (len(bot.guilds) - 1):
             print('\n\n\n', end="")
-        BOT_IS_READY = True
-
+    BOT_IS_READY = True
 
 for filename in os.listdir('Bot/cogs'):
     if filename.endswith('.py') and not filename.startswith('_'):

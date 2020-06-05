@@ -12,6 +12,7 @@ emoji = "*"
 quart = "*"
 discord-py = {extras = ["voice"],git = "https://github.com/Rapptz/discord.py",ref = "master"}
 pillow = "*"
+psutil = "*"
 
 [requires]
 python_version = "3.8"

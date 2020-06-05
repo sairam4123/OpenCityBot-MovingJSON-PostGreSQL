@@ -132,4 +132,4 @@ dmypy.json
 
 ~*.py
 !/Bot/cogs/Applications.py
-!/Bot/cogs/Reaction_Roles.py
+!/Bot/cogs/_Reaction_Roles.py
