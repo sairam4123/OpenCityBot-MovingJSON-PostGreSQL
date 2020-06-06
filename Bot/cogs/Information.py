@@ -163,10 +163,12 @@ class Information(commands.Cog):
 
         bot_owners = ""
         if appinfo.team is None:
+            print(self.bot.owner_id)
             bot_owner = await self.bot.fetch_user(self.bot.owner_id)
             bot_owners = "`" + bot_owner.display_name + "#" + bot_owner.discriminator + "`"
         else:
             for bot_owner_id in self.bot.owner_ids:
+                print(self.bot.owner_ids)
                 bot_owner = await self.bot.fetch_user(bot_owner_id)
                 bot_owners += " `" + bot_owner.display_name + "#" + bot_owner.discriminator + "`"
 
