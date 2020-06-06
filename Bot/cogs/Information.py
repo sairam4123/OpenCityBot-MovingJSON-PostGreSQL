@@ -107,11 +107,12 @@ class Information(commands.Cog):
         return False
 
     @commands.command(help='Pings the bot and gives latency')
+    @commands.cooldown(2, 10)
     async def ping(self, ctx: discord.ext.commands.context.Context):
         time_before = datetime.datetime.utcnow()
         message = await ctx.send(f'Pong! `{round(self.bot.latency * 1000)}ms\\` latency')
         time_after = datetime.datetime.utcnow() - time_before
-        await message.edit(content=f"Pong! `{round(self.bot.latency * 1000)}ms\\{round(time_after.total_seconds() * 100)}ms` Latency")
+        await message.edit(content=f"Pong! `{round(self.bot.latency * 1000)}ms\\{round(time_after.total_seconds() * 1000)}ms` latency")
 
     @commands.command(help="Gives you invite for this bot!")
     async def invite(self, ctx: commands.Context):
@@ -135,7 +136,7 @@ class Information(commands.Cog):
         pass
 
     @info.command(help="Gives the info of a user.", name="user", aliases=['u'])
-    async def info_user(self, ctx: commands.Context, member: discord.Member = None):
+    async def info_user(self, ctx: commands.Context, member: Optional[Union[discord.Member, discord.User]]):
         member = ctx.author if member is None else member
 
         device = "<:android:718485581142687774> Phone" if member.is_on_mobile() else "<:windows:718485580819726366> Desktop"
@@ -149,7 +150,8 @@ class Information(commands.Cog):
         embed.add_field(name="ID", value=member.id)
         embed.add_field(name="Created at", value=f"{convert_utc_into_ist(member.created_at)[1]} \n {format_duration(datetime_to_seconds(member.created_at))} ago", inline=False)
         embed.add_field(name="Joined at", value=f"{convert_utc_into_ist(member.joined_at)[1]} \n {format_duration(datetime_to_seconds(member.joined_at))} ago")
-        embed.add_field(name="Roles", value=role_string(list(reversed(member.roles[1:]))), inline=False)
+        embed.add_field(name="Roles", value=role_string(list(reversed(member.roles[1:]))) if role_string(list(reversed(member.roles[1:]))) else "This man has no roles",
+                        inline=False)
         embed.add_field(name="Avatar URL", value=f"[Avatar URL]({member.avatar_url})")
         embed.add_field(name="Device", value=f"{device}")
         embed.add_field(name="Status", value=f"{status}")
@@ -178,6 +180,7 @@ class Information(commands.Cog):
         embed.add_field(name="Discord.py version", value=discord.__version__)
         embed.add_field(name="Servers count", value=f"{len(self.bot.guilds)}")
         embed.add_field(name="Users count", value=f"{len(self.bot.users)}")
+        embed.add_field(name="Channels count", value=f"{len([channel for channel in self.bot.get_all_channels()])}")
         embed.add_field(name="Bot Owner(s)", value=bot_owners, inline=False)
         embed.add_field(name="CPU Usage", value=f"`{psutil.cpu_percent()}%`")
         embed.add_field(name="Created at", value=f"{convert_utc_into_ist(self.bot.user.created_at)[1]} \n {format_duration(datetime_to_seconds(self.bot.user.created_at))} ago")
@@ -310,7 +313,41 @@ class Information(commands.Cog):
         embed.add_field(name="Mention", value=channel.mention)
         embed.add_field(name="Position (from top)", value=f"{(list(reversed(ctx.guild.channels)).index(channel) + 1)}")
         embed.add_field(name="Position (from bottom)", value=f"{(ctx.guild.channels.index(channel) + 1)}")
+        embed.add_field(name="Slowmode", value=channel.slowmode_delay)
+        embed.add_field(name="Channel Topic", value="Channel topic not available." if not channel.topic else channel.topic)
         await ctx.send(embed=embed)
+
+    @commands.command(help="Gives the avatar.", name="avatar", aliases=['av'])
+    async def avatar(self, ctx, member: Optional[Union[discord.Member, discord.User]]):
+        member = ctx.author if not member else member
+        embed = discord.Embed(title=f"Avatar for {member.name}#{member.discriminator}")
+        png = f"[png]({member.avatar_url_as(format='png')})"
+        jpg = f"[jpg]({member.avatar_url_as(format='jpg')})"
+        webp = f"[webp]({member.avatar_url_as(format='webp')})"
+        jepg = f"[jepg]({member.avatar_url_as(format='jpeg')})"
+        gif = f"[gif]({member.avatar_url_as(format='gif')})" if member.is_avatar_animated() else "|| gif not available ||"
+        embed.add_field(name="Link as", value=f"{png} | {jpg} | {webp} | {gif} | {jepg}")
+        embed.set_image(url=member.avatar_url)
+        await ctx.send(embed=embed)
+
+    @info.command(name="emoji", aliases=['e'], help="Gives the info the given emoji.")
+    async def info_emoji(self, ctx, emoji: discord.Emoji):
+        guild: discord.Guild = await self.bot.fetch_guild(ctx.guild.id)
+        emoji = await guild.fetch_emoji(emoji.id)
+        embed = discord.Embed(title=f"Info of {emoji}")
+        embed.add_field(name="Emoji name", value=f"{emoji.name}")
+        embed.add_field(name="ID", value=f"{emoji.id}")
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(emoji.created_at)[1]} \n {format_duration(datetime_to_seconds(emoji.created_at))} ago")
+        embed.add_field(name="Is animated?", value=emoji.animated)
+        embed.add_field(name="Is managed?", value=emoji.managed)
+        embed.add_field(name="URL", value=f"{f'[URL]({emoji.url})' if emoji.url else 'None'}")
+        embed.add_field(name="Uploaded by", value=f"{emoji.user}")
+        await ctx.send(embed=embed)
+
+    @info_emoji.error
+    async def info_emoji_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("I can't give info for unicode symbols.")
 
 
 def setup(bot):
