@@ -55,6 +55,14 @@ bot.prefix_default = PREFIX.split(DELIMITER)
 bot.start_number = 1000000000000000
 bot.ticket_emoji_default = TICKET_EMOJI.split(DELIMITER)
 
+str_text = "OpenCity • Type {}help to get started"
+ACTIVITIES = cycle([discord.Game(name=str_text),
+                    discord.Streaming(name=str_text, url="https://www.twitch.tv/opencitybotdiscord"),
+                    discord.Activity(type=discord.ActivityType.listening, name=str_text),
+                    discord.Activity(type=discord.ActivityType.watching, name=str_text)
+                    ])
+STATUSES = cycle([discord.Status.online, discord.Status.idle, discord.Status.do_not_disturb])
+
 
 async def connection_for_pg():
     bot.pg_conn = await asyncpg.create_pool(DATABASE_URL)
@@ -139,12 +147,9 @@ print('loaded dispatcher successfully')
 async def my_presence_per_day():
     await bot.wait_until_ready()
     prefix = next(cycle(bot.prefix_default))
-    status = next(cycle([discord.Status.do_not_disturb, discord.Status.online, discord.Status.idle, discord.Status.dnd]))
-    activity = next(cycle([discord.Game(name=f"OpenCity • Type {prefix}help to get started"),
-                           discord.Streaming(name=f"OpenCity • Type {prefix}help to get started", url="https://www.twitch.tv/opencitybotdiscord"),
-                           discord.Activity(type=discord.ActivityType.listening, name=f"OpenCity • Type {prefix}help to get started"),
-                           discord.Activity(type=discord.ActivityType.watching, name=f"OpenCity • Type {prefix}help to get started")
-                           ]))
+    status = next(STATUSES)
+    activity = next(ACTIVITIES)
+    activity.name = activity.name.format(prefix)
     await bot.change_presence(status=status, activity=activity)
 
 
