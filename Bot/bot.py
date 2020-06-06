@@ -40,11 +40,11 @@ async def get_prefix(bot_1, message):
 bot = commands.Bot(command_prefix=get_prefix)
 app = Quart(__name__)
 
-prefix = next(cycle(bot.prefix_default))
-ACTIVITIES = cycle([discord.Game(name=f"OpenCity • Type {prefix}help to get started"),
-                    discord.Streaming(name=f"OpenCity • Type {prefix}help to get started", url="https://www.twitch.tv/opencitybotdiscord"),
-                    discord.Activity(type=discord.ActivityType.listening, name=f"OpenCity • Type {prefix}help to get started"),
-                    discord.Activity(type=discord.ActivityType.watching, name=f"OpenCity • Type {prefix}help to get started")
+str_text = "OpenCity • Type {}help to get started"
+ACTIVITIES = cycle([discord.Game(name=str_text),
+                    discord.Streaming(name=str_text, url="https://www.twitch.tv/opencitybotdiscord"),
+                    discord.Activity(type=discord.ActivityType.listening, name=str_text),
+                    discord.Activity(type=discord.ActivityType.watching, name=str_text)
                     ])
 STATUSES = cycle([discord.Status.online, discord.Status.idle, discord.Status.do_not_disturb])
 
@@ -149,6 +149,7 @@ async def my_presence_per_day():
     prefix = next(cycle(bot.prefix_default))
     status = next(STATUSES)
     activity = next(ACTIVITIES)
+    activity.name = activity.name.format(prefix)
     await bot.change_presence(status=status, activity=activity)
 
 
