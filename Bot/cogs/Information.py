@@ -107,6 +107,7 @@ class Information(commands.Cog):
         return False
 
     @commands.command(help='Pings the bot and gives latency')
+    @commands.cooldown(2, 10)
     async def ping(self, ctx: discord.ext.commands.context.Context):
         time_before = datetime.datetime.utcnow()
         message = await ctx.send(f'Pong! `{round(self.bot.latency * 1000)}ms\\` latency')

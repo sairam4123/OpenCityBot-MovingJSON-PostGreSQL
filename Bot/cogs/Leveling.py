@@ -239,7 +239,7 @@ class Leveling(commands.Cog):
 
     @commands.command(help="Creates leveling roles for this server!", hidden=True)
     @commands.check_any(is_guild_owner(), commands.is_owner())
-    @commands.cooldown(6 * 3600, 1)
+    @commands.cooldown(1, 6 * 3600)
     async def create_roles(self, ctx: commands.Context):
         perms_list = list(reversed([list(reversed(perms_list_1)) for perms_list_1 in self.perms_list]))
         if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) not in ctx.guild.roles:

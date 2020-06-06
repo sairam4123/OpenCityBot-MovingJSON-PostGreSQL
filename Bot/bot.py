@@ -8,6 +8,8 @@ import discord
 from discord.ext import commands, tasks
 from quart import Quart
 
+from development.Bot.cogs.utils.timeformat_bot import format_duration
+
 TOKEN = os.getenv('DISCORD_TOKEN')
 CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
 
@@ -97,7 +99,7 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     elif isinstance(error, commands.NoPrivateMessage):
         await ctx.send("You can't send this commands here!")
     elif isinstance(error, commands.CommandOnCooldown):
-        await ctx.send("The command you send is on cooldown!")
+        await ctx.send(f"The command you send is on cooldown! Try again after {format_duration(int(error.retry_after))}.")
     else:
         raise error
 
