@@ -1,8 +1,9 @@
 from typing import Optional
 
 import discord
-from Bot.cogs.utils.checks import is_guild_owner
 from discord.ext import commands
+
+from .utils.checks import is_guild_owner
 
 
 class Configuration(commands.Cog):

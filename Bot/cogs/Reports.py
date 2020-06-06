@@ -1,8 +1,9 @@
 from typing import Optional, Union
 
 import discord
-from Bot.cogs.utils.timeformat_bot import indian_standard_time_now
 from discord.ext import commands
+
+from .utils.timeformat_bot import indian_standard_time_now
 
 
 class Reports(commands.Cog):
