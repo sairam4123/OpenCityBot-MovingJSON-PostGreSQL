@@ -2,6 +2,7 @@ import binascii
 import colorsys
 import io
 import os
+import pathlib
 from typing import Optional
 
 import discord
@@ -16,16 +17,16 @@ class Utils(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # async def cog_check(self, ctx):
-    #     if ctx.channel.type == discord.ChannelType.private:
-    #         return True
-    #     enabled = await self.bot.pg_conn.fetchval("""
-    #         SELECT enabled FROM cogs_data
-    #         WHERE guild_id = $1
-    #         """, ctx.guild.id)
-    #     if f"Bot.cogs.{self.qualified_name}" in enabled:
-    #         return True
-    #     return False
+    async def cog_check(self, ctx):
+        if ctx.channel.type == discord.ChannelType.private:
+            return True
+        enabled = await self.bot.pg_conn.fetchval("""
+            SELECT enabled FROM cogs_data
+            WHERE guild_id = $1
+            """, ctx.guild.id)
+        if f"Bot.cogs.{self.qualified_name}" in enabled:
+            return True
+        return False
 
     @staticmethod
     def random_color():
@@ -55,7 +56,9 @@ class Utils(commands.Cog):
     async def bookmark(self, ctx, message_link: discord.Message):
         embed = discord.Embed()
         embed.title = "Bookmark"
-        file = open(r'F:\PyCharm Python Works\OpenCityBot-MovingJSON-PostgreSQL\development\Bot\cogs\images\654080405988966419.png', 'rb')
+        base_path = pathlib.Path(__file__).parent.resolve()
+        print(base_path)
+        file = open(base_path / r'images/654080405988966419.png', 'rb')
         embed.set_thumbnail(url="attachment://bookmark.png")
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         embed.description = message_link.content
