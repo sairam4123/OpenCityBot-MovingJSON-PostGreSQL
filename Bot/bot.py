@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 from itertools import cycle
 
 import asyncpg
@@ -71,6 +72,8 @@ async def on_ready():
         if guild_index != (len(bot.guilds) - 1):
             print('\n\n\n', end="")
         BOT_IS_READY = True
+    random_user = random.choice(bot.users)
+    await bot.is_owner(random_user)
 
 
 for filename in os.listdir('Bot/cogs'):
