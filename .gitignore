@@ -130,6 +130,4 @@ dmypy.json
 
 .idea/
 
-~*.py
-!/Bot/cogs/Applications.py
-!/Bot/cogs/Reaction_Roles.py
+_*.py
