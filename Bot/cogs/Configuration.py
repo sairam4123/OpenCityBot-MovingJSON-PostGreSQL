@@ -3,7 +3,8 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
-from .utils.checks import is_guild_owner
+from .utils.checks import is_administrator_or_permission, is_guild_owner
+from .utils.list_manipulation import insert_or_append, pop_or_remove, replace_or_set
 
 
 class Configuration(commands.Cog):
@@ -39,13 +40,16 @@ class Configuration(commands.Cog):
         await ctx.send(embed=embed)
 
     @prefix.command(name="set", help="Sets the prefix for a guild!", aliases=['='])
-    @commands.check_any(is_guild_owner(), commands.is_owner())
+    @commands.check_any(is_guild_owner(), commands.is_owner(), is_administrator_or_permission(administrator=True))
     async def prefix_set(self, ctx: commands.Context, prefix, index: Optional[int] = 0):
         prefix_list = await self.bot.pg_conn.fetchval("""
         SELECT prefixes FROM prefix_data
         WHERE guild_id = $1
         """, ctx.guild.id)
-        prefix_list[index] = prefix
+        try:
+            prefix_list, prefix_list, index = replace_or_set(prefix_list, prefix, index)
+        except IndexError as ie:
+            await ctx.send(str(ie))
         await self.bot.pg_conn.execute("""
         UPDATE prefix_data
         SET prefixes = $2
@@ -54,13 +58,16 @@ class Configuration(commands.Cog):
         await ctx.send(f"Set prefix to {prefix}")
 
     @prefix.command(name="add", help="Adds a prefix for a guild!", aliases=['+'])
-    @commands.check_any(is_guild_owner(), commands.is_owner())
-    async def prefix_add(self, ctx: commands.Context, prefix):
+    @commands.check_any(is_guild_owner(), commands.is_owner(), is_administrator_or_permission(administrator=True))
+    async def prefix_add(self, ctx: commands.Context, prefix, index: Optional[int] = None):
         prefix_list = await self.bot.pg_conn.fetchval("""
         SELECT prefixes FROM prefix_data
         WHERE guild_id = $1
         """, ctx.guild.id)
-        prefix_list.append(prefix)
+        try:
+            prefix_list, prefix_list, index = insert_or_append(prefix_list, prefix, index)
+        except IndexError as ie:
+            await ctx.send(str(ie))
         await self.bot.pg_conn.execute("""
                 UPDATE prefix_data
                 SET prefixes = $2
@@ -69,13 +76,16 @@ class Configuration(commands.Cog):
         await ctx.send(f"Added prefix to {prefix}")
 
     @prefix.command(name="remove", help="Removes the prefix for a guild with index value!", aliases=['-'])
-    @commands.check_any(is_guild_owner(), commands.is_owner())
-    async def prefix_remove(self, ctx: commands.Context, prefix):
+    @commands.check_any(is_guild_owner(), commands.is_owner(), is_administrator_or_permission(administrator=True))
+    async def prefix_remove(self, ctx: commands.Context, prefix, index: Optional[int] = None):
         prefix_list = await self.bot.pg_conn.fetchval("""
         SELECT prefixes FROM prefix_data
         WHERE guild_id = $1
         """, ctx.guild.id)
-        prefix_list.remove(prefix)
+        try:
+            prefix_list, prefix_list, index = pop_or_remove(prefix_list, prefix, index)
+        except IndexError as ie:
+            await ctx.send(str(ie))
         await self.bot.pg_conn.execute("""
                 UPDATE prefix_data
                 SET prefixes = $2
@@ -101,7 +111,7 @@ class Configuration(commands.Cog):
         await ctx.send(embed=embed)
 
     @plugin.command(name="enable", help="Enables given plugin!", aliases=['+'])
-    @commands.check_any(is_guild_owner(), commands.is_owner())
+    @commands.check_any(is_guild_owner(), commands.is_owner(), is_administrator_or_permission(administrator=True))
     async def plugin_enable(self, ctx: commands.Context, plugin_ext: str):
         enabled = await self.bot.pg_conn.fetchval("""
          SELECT enabled FROM cogs_data
@@ -113,7 +123,7 @@ class Configuration(commands.Cog):
          """, ctx.guild.id)
         plugin_to_enable = f"Bot.cogs.{plugin_ext.replace('_', ' ').title().replace(' ', '_')}"
         if plugin_to_enable in enabled:
-            await ctx.send("Plugin already enabled!")
+            return await ctx.send("Plugin already enabled!")
         else:
             try:
                 disabled.remove(plugin_to_enable)
@@ -141,7 +151,7 @@ class Configuration(commands.Cog):
         await ctx.send("Plugin enabled successfully")
 
     @plugin.command(name="disable", help="Disables given plugin!", aliases=['-'])
-    @commands.check_any(is_guild_owner(), commands.is_owner())
+    @commands.check_any(is_guild_owner(), commands.is_owner(), is_administrator_or_permission(administrator=True))
     async def plugin_disable(self, ctx: commands.Context, plugin_ext: str):
         enabled = await self.bot.pg_conn.fetchval("""
          SELECT enabled FROM cogs_data
@@ -153,7 +163,7 @@ class Configuration(commands.Cog):
          """, ctx.guild.id)
         plugin_to_disable = f"Bot.cogs.{plugin_ext.replace('_', ' ').title().replace(' ', '_')}"
         if plugin_to_disable in disabled:
-            await ctx.send("Plugin already disabled!")
+            return await ctx.send("Plugin already disabled!")
         else:
             try:
                 enabled.remove(plugin_to_disable)

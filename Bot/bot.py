@@ -51,6 +51,7 @@ bot.oauth_url = discord.utils.oauth_url(client_id=CLIENT_ID, permissions=discord
 bot.init_cogs = [f'Bot.cogs.{filename[:-3]}' for filename in os.listdir('Bot/cogs') if filename.endswith('.py')]
 bot.invite_url = discord.utils.oauth_url(client_id=CLIENT_ID, permissions=discord.Permissions(8))
 bot.start_time = datetime.datetime.utcnow()
+bot.credits = ['NameKhan72', 'SQWiperYT', 'Wizard BINAY', 'Sairam']
 bot.prefix_default = PREFIX.split(DELIMITER)
 bot.start_number = 1000000000000000
 bot.ticket_emoji_default = TICKET_EMOJI.split(DELIMITER)
@@ -92,6 +93,7 @@ for filename in os.listdir('Bot/cogs'):
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+    error = getattr(error, "original", error)
     if isinstance(error, commands.CommandNotFound):
         await ctx.send("Command Not found!")
     elif isinstance(error, commands.MissingPermissions):
@@ -108,6 +110,8 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
         await ctx.send("You can't send this commands here!")
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f"The command you send is on cooldown! Try again after {format_duration(int(error.retry_after))}.")
+    elif isinstance(error, discord.Forbidden):
+        await ctx.send(error.text)
     else:
         raise error
 
@@ -157,13 +161,26 @@ async def my_presence_per_day():
 # async def add_guild_to_db_error(error):
 #     raise error
 #
+@bot.check
+async def blacklist_check(ctx: commands.Context):
+    black_listed_users = await bot.pg_conn.fetchval("""
+    SELECT black_listed_users FROM black_listed_users_data
+    """)
+    if not black_listed_users:
+        return True
+    if ctx.author.id not in black_listed_users:
+        return True
+    else:
+        await ctx.send("You're blacklisted from using this bot completely. You can appeal for unblacklisting by DMing my owner.")
+        return False
+
+
 bot.loop.run_until_complete(connection_for_pg())
 bot.loop.create_task(app.run_task(host=IP_ADDRESS, port=int(PORT_NUMBER)))
 my_presence_per_day.start()
 add_guild_to_db.start()
 
 bot.run(TOKEN)
-
 
 # async def main():
 #     asyncio.get_running_loop().create_task(app.run_task(host=IP_ADDRESS, port=int(PORT_NUMBER)))

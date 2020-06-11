@@ -130,6 +130,7 @@ dmypy.json
 
 .idea/
 
-~*.py
-!/Bot/cogs/Applications.py
-!/Bot/cogs/_Reaction_Roles.py
+_*.py
+/Bot/cogs/Global_Chat.py
+/Bot/cogs/Gate_Keeper.py
+/tester.py

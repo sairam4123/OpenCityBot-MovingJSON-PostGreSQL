@@ -4,6 +4,8 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
+from .utils.list_manipulation import insert_or_append, pop_or_remove
+
 
 class Applications(commands.Cog):
 
@@ -98,7 +100,7 @@ class Applications(commands.Cog):
         # json.dump(application_data, open(self.bot.applications_json, "w"), indent='\t')
 
     @questions.command(name="add", help="Adds a question to a application", aliases=['+'])
-    async def question_add(self, ctx, application_name, question, index: Optional[int] = -1):
+    async def question_add(self, ctx, application_name, question, index: Optional[int] = None):
         list_of_questions = await self.bot.pg_conn.fetchval("""
         SELECT questions FROM application_data
         WHERE guild_id = $1 AND application_name = $2
@@ -106,20 +108,20 @@ class Applications(commands.Cog):
         if not list_of_questions:
             await ctx.send("The application name you sent is not available in this server!")
             return
-        index_value_if_index_is_minus_one = 0
-        if index == -1:
-            list_of_questions.append(question)
-            index_value_if_index_is_minus_one = list_of_questions.index(question)
-        elif 0 <= index < len(list_of_questions):
-            list_of_questions.insert(index, question)
-        else:
-            await ctx.send("Index invalid!")
-            return
-        await ctx.send(f"Added your question at {index if index != -1 else index_value_if_index_is_minus_one}")
+        try:
+            list_of_questions, question, index = insert_or_append(list_of_questions, question, index)
+        except IndexError as ie:
+            await ctx.send(ie)
+        await self.bot.pg_conn("""
+        UPDATE application_data
+        SET questions = $3
+        WHERE guild_id = $1 AND application_name = $2
+        """, ctx.guild.id, application_name, list_of_questions)
+        await ctx.send(f"Added your question {question} at {index}")
         # json.dump(application_data, open(self.bot.applications_json, "w"), indent='\t')
 
     @questions.command(name="remove", help="Removes a question from a application", aliases=['-'])
-    async def question_remove(self, ctx, application_name, question, index: Optional[int] = -1):
+    async def question_remove(self, ctx, application_name, question, index: Optional[int] = None):
         list_of_questions = await self.bot.pg_conn.fetchval("""
         SELECT questions FROM application_data
         WHERE guild_id = $1 AND application_name = $2
@@ -127,16 +129,16 @@ class Applications(commands.Cog):
         if not list_of_questions:
             await ctx.send("The application name you sent is not available in this server!")
             return
-        index_value_if_index_is_minus_one = 0
-        if index == -1:
-            index_value_if_index_is_minus_one = list_of_questions.index(question)
-            list_of_questions.remove(question)
-        elif 0 <= index < len(list_of_questions):
-            list_of_questions.pop(index)
-        else:
-            await ctx.send("Index invalid!")
-            return
-        await ctx.send(f"Removed your question at {index if index != -1 else index_value_if_index_is_minus_one}")
+        try:
+            list_of_questions, question, index = pop_or_remove(list_of_questions, question, index)
+        except IndexError as ie:
+            await ctx.send(str(ie))
+        await self.bot.pg_conn("""
+                UPDATE application_data
+                SET questions = $3
+                WHERE guild_id = $1 AND application_name = $2
+                """, ctx.guild.id, application_name, list_of_questions)
+        await ctx.send(f"Removed your question {question} at {index}")
         # json.dump(application_data, open(self.bot.applications_json, "w"), indent='\t')
 
     @applications.command(name='add', help='Adds a application to a server.', aliases=['+'])

@@ -16,7 +16,13 @@ class dispatcher(commands.Cog):
                 if entry.target == member:
                     self.bot.dispatch('member_kick', member)
                     return
-        self.bot.dispatch('member_leave', member)
+        try:
+            if member.guild.fetch_bans(member):
+                return
+        except (discord.HTTPException, discord.Forbidden, discord.NotFound):
+            pass
+        else:
+            self.bot.dispatch('member_leave', member)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):

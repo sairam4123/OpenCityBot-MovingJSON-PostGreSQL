@@ -84,13 +84,84 @@ class MyHelpCommand(commands.HelpCommand):
     #     return '{0.clean_prefix}{1.qualified_name} {1.signature}'.format(self, command)
 
 
+class MyBriefCommand(commands.HelpCommand):
+    def __init__(self, **options):
+        super().__init__(**options)
+
+    async def send_command_help(self, command: commands.Command):
+        if (not command.hidden) or await self.context.bot.is_owner(self.context.author) or (
+                command in await self.filter_commands(command.root_parent.commands if command.root_parent else command.cog.get_commands())):
+            embed = discord.Embed()
+            embed.title = f"{self.context.prefix}{command.name}"
+            embed.colour = discord.Colour.dark_green()
+            embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
+            embed.add_field(name="Usage", value=f"`{self.get_command_signature(command)}`")
+            embed.add_field(name="Aliases", value=" | ".join([f"`{alias}`" for alias in command.aliases]) if command.aliases else f"`{command.name}`")
+            embed.add_field(name="Module", value=f"{str(command.cog.qualified_name)}")
+            embed.description = command.brief if command.brief else command.help
+            await self.context.send(embed=embed)
+        else:
+            if command.parent is None:
+                await self.context.send(self.command_not_found(command.qualified_name))
+            else:
+                await self.context.send(self.subcommand_not_found(command.parent, command.name))
+
+    async def send_bot_help(self, mapping: Mapping[Optional[commands.Cog], List[commands.Command]]):
+        embed = discord.Embed()
+        embed.colour = discord.Colour.dark_blue()
+        embed.title = f"Need some brief help, right? Get it here! " + str(len(self.context.bot.commands))
+        embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
+        for cogs in mapping.keys():
+            if cogs is not None:
+                if len(await self.filter_commands(cogs.get_commands())) != 0:
+                    embed.add_field(name=cogs.qualified_name, value=", ".join([
+                        f"`{self.context.prefix}{command}`" for command in await self.filter_commands(cogs.get_commands()) if
+                        not command.hidden or await self.context.bot.is_owner(self.context.author)]),
+                                    inline=False)
+        # for field in embed.fields:
+        #     if not field.value:
+        #         # embed.remove_field()
+        #         print(embed.fields)
+        #         embed.fields.index(field)
+
+        await self.context.send(embed=embed)
+
+    async def send_cog_help(self, cog: commands.Cog):
+        if cog.qualified_name != "System":
+            embed = discord.Embed()
+            embed.colour = discord.Colour.dark_gold()
+            embed.title = cog.qualified_name
+            embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
+            for command in cog.get_commands():
+                if command is not None and command in await self.filter_commands(cog.get_commands()):
+                    embed.add_field(name=command.name, value=command.brief if command.brief else command.help, inline=False)
+            await self.context.send(embed=embed)
+        else:
+            await self.context.send("There is no cog named System!")
+
+    async def send_group_help(self, group: commands.Group):
+        embed = discord.Embed()
+        embed.colour = discord.Colour.dark_orange()
+        embed.title = group.qualified_name
+        embed.description = f"Usage: `{self.get_command_signature(group)}`\nAliases: {' | '.join([f'`{alias}`' for alias in group.aliases]) if group.aliases else f'`{group.name}`'}\nHelp: {group.help}"
+        embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
+        for command in group.commands:
+            if command in await self.filter_commands(group.commands):
+                embed.add_field(name=command.name, value=command.brief)
+        await self.context.send(embed=embed)
+
+    # def get_command_signature(self, command):
+    #     return '{0.clean_prefix}{1.qualified_name} {1.signature}'.format(self, command)
+
+
 class Information(commands.Cog):
-    
+
     def __init__(self, bot):
         self.bot: commands.Bot = bot
         self._original_help_command = bot.help_command
         bot.help_command = MyHelpCommand()
         bot.help_command.cog = self
+        self.brief_command = MyBriefCommand()
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
@@ -123,6 +194,11 @@ class Information(commands.Cog):
         )
         await ctx.send(embed=embed)
 
+    @commands.group(name="brief", help='gives the brief for the commands or cogs.')
+    async def brief_(self, ctx: commands.Context, *, argument=None):
+        self.brief_command.context = ctx
+        await self.brief_command.command_callback(ctx, command=argument)
+
     @commands.command(help="Gives you the bot's uptime!")
     async def uptime(self, ctx: commands.Context):
         delta_uptime = datetime.datetime.utcnow() - self.bot.start_time
@@ -131,7 +207,7 @@ class Information(commands.Cog):
         days, hours = divmod(hours, 24)
         await ctx.send(f"Uptime: {days}d, {hours}h, {minutes}m, {seconds}s")
 
-    @commands.group(help="Gives you info of the thing you want. Emoji info will be added soon.", aliases=['i'])
+    @commands.group(help="Gives you info of the thing you want.", aliases=['i'])
     async def info(self, ctx):
         pass
 
@@ -289,8 +365,8 @@ class Information(commands.Cog):
                         value=f"<:online:713029272125833337> {online_members} \t <:invisible:713029271391830109> {offline_members} \n <:idle:713029270976331797> {idle_members} \t <:dnd:713029270489792533> {dnd_members} \n \n :robot: {bots} \t <:members:716546232570347560> {humans} \n \n Total: {len(role.members)}")
         embed.add_field(name="Colour", value=f"{role.colour}", inline=False)
         embed.add_field(name="Mention", value=role.mention)
-        embed.add_field(name="Position (from top)", value=f"{(list(reversed(ctx.guild.roles[1:])).index(role) + 1)}")
-        embed.add_field(name="Position (from bottom)", value=f"{((ctx.guild.roles[1:]).index(role) + 1)}")
+        embed.add_field(name="Position (from top) (with uncategorized category)", value=f"{list(reversed(ctx.guild.roles)).index(role) + 1}")
+        embed.add_field(name="Position (from bottom)", value=f"{ctx.guild.roles.index(role) + 1}")
         await ctx.send(embed=embed)
 
     @info.command(help="Gives the info of a channel.", name="channel", aliases=['c'])
@@ -311,8 +387,8 @@ class Information(commands.Cog):
                         value=type_1)
         embed.add_field(name="Parent", value=f"{channel.category}", inline=False)
         embed.add_field(name="Mention", value=channel.mention)
-        embed.add_field(name="Position (from top)", value=f"{(list(reversed(ctx.guild.channels)).index(channel) + 1)}")
-        embed.add_field(name="Position (from bottom)", value=f"{(ctx.guild.channels.index(channel) + 1)}")
+        embed.add_field(name="Position (from top)", value=f"{list(reversed(ctx.guild.channels)).index(channel) + 1}")
+        embed.add_field(name="Position (from bottom)", value=f"{ctx.guild.channels.index(channel) + 1}")
         embed.add_field(name="Slowmode", value=channel.slowmode_delay)
         embed.add_field(name="Channel Topic", value="Channel topic not available." if not channel.topic else channel.topic)
         await ctx.send(embed=embed)
@@ -348,6 +424,14 @@ class Information(commands.Cog):
     async def info_emoji_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("I can't give info for unicode symbols.")
+
+    @commands.command()
+    async def credits(self, ctx: commands.Context):
+        for member in self.bot.credits:
+            member = self.bot.(member)
+
+        credit = [f"{index}. {}#{}" for index, member in enumerate(self.bot.credits)]
+        await ctx.send("I have been made by these people." + "\n".join([f"{index}. {}#{}" for index, member in enumerate(self.bot.credits)]))
 
 
 def setup(bot):

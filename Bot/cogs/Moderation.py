@@ -70,7 +70,7 @@ class Moderation(commands.Cog):
 
     @commands.command(help="Purges the given amount of messages", aliases=['clear'])
     @commands.has_guild_permissions(manage_messages=True)
-    async def purge(self, ctx: discord.ext.commands.context.Context, amount_of_messages=1, author: Optional[discord.Member] = None):
+    async def purge(self, ctx: discord.ext.commands.context.Context, amount_of_messages=11110, author: Optional[discord.Member] = None):
         await ctx.channel.purge(limit=amount_of_messages, check=lambda m: True if author is None else m.author == author)
 
     @commands.command(help="Get the status!")
