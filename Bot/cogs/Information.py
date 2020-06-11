@@ -427,11 +427,7 @@ class Information(commands.Cog):
 
     @commands.command()
     async def credits(self, ctx: commands.Context):
-        for member in self.bot.credits:
-            member = self.bot.(member)
-
-        credit = [f"{index}. {}#{}" for index, member in enumerate(self.bot.credits)]
-        await ctx.send("I have been made by these people." + "\n".join([f"{index}. {}#{}" for index, member in enumerate(self.bot.credits)]))
+        await ctx.send("I have been made by these people." + "\n".join([f"{index}. {member}#{member}" for index, member in enumerate(self.bot.credits)]))
 
 
 def setup(bot):
