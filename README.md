@@ -8,6 +8,7 @@ I am currently moving the json files as the JSON takes space. So, it is better f
 
 
 Here's how you need to run the bot file. I recommend using PyCharm.
+You need a [PostgreSQL](https://postgresql.org) database.
 If you use PyCharm:
   1. Open the folder as Project.
   2. Create a env file. 
