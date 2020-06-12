@@ -17,7 +17,7 @@ If you use PyCharm:
   6. Run the `start.sh`
 That's it
 
-If you'd like to have some templates and run configs. Feel free to DM me in (Discord)[https://discord.com]. 
+If you'd like to have some templates and run configs. Feel free to DM me in [Discord](https://discord.com). 
 Sairam#4334
 ________________________________________________________________
 Thank you.
