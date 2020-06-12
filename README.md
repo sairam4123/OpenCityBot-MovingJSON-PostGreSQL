@@ -18,6 +18,7 @@ If you use PyCharm:
   4. Run this code `pipenv install` (I assume that you have installed pipenv)
   5. Run this code `python table_creator`
   6. Run the `start.sh`
+
 That's it
 
 If you'd like to have some templates and run configs. Feel free to DM me in [Discord](https://discord.com). 
