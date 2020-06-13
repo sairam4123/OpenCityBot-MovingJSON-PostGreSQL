@@ -131,6 +131,4 @@ dmypy.json
 .idea/
 
 _*.py
-/Bot/cogs/Global_Chat.py
-/Bot/cogs/Gate_Keeper.py
 /tester.py

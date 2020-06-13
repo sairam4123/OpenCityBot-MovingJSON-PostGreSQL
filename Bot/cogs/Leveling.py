@@ -7,6 +7,7 @@ from discord.ext import commands
 
 from .utils.checks import is_guild_owner
 from .utils.color_builder import color_dict_to_discord_color_list
+from .utils.converters import bool1
 from .utils.numbers import make_ordinal
 from .utils.permision_builder import permission_builder
 
@@ -418,15 +419,15 @@ class Leveling(commands.Cog):
         """, ctx.guild.id, channel.id)
         await ctx.send(f"Set the level up message channel to {channel.mention}")
 
-    @commands.group(name="level_up_message_status", help="Toggles the enabling and disabling of level up messages.")
-    async def toggle_level_up_message(self, ctx, status):
-        if status == "enabled":
+    @commands.command(name="level_up_message_status", help="Toggles the enabling and disabling of level up messages.")
+    async def toggle_level_up_message(self, ctx, status: bool1):
+        if status:
             await self.bot.pg_conn.execute("""
                     UPDATE leveling_message_destination_data
                     SET "enabled?" = TRUE
                     WHERE guild_id = $1
                     """, ctx.guild.id)
-        if status == "disabled":
+        else:
             await self.bot.pg_conn.execute("""
                        UPDATE leveling_message_destination_data
                        SET "enabled?" = FALSE
