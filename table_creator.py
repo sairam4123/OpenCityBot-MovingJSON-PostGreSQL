@@ -8,44 +8,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 
 async def create_tables():
     pg_conn = await asyncpg.connect(DATABASE_URL)
-    # noinspection SqlWithoutWhere
     await pg_conn.execute("""
-
-            drop table if exists prefix_data cascade;
-
-            drop table if exists cogs_data cascade;
-
-            drop table if exists voice_text_data cascade;
-
-            drop table if exists suggestion_data cascade;
-
-            drop table if exists report_data cascade;
-
-            drop table if exists ticket_data cascade;
-
-            drop table if exists tunnel_data cascade;
-
-            drop table if exists id_data cascade;
-
-            drop table if exists count_data cascade;
-
-            drop table if exists leveling_data cascade;
-
-            drop table if exists application_data cascade;
-
-            drop table if exists join_to_create_data cascade;
-
-            drop table if exists reaction_roles_data cascade;
-
-            drop table if exists bank_data cascade;
-
-            drop table if exists economy_data cascade;
-
-            drop table if exists leveling_message_destination_data cascade;
-
-            drop table if exists gate_keeper_data cascade;
-
-            drop table if exists black_listed_users_data cascade;
 
             create table if not exists prefix_data
             (
@@ -261,9 +224,110 @@ async def create_tables():
                 black_listed_users bigint[],
                 row_id             integer default 1
             );
+            
+            create table if not exists jokes_data
+            (
+                questions text,
+                answers text
+            );
 
     """)
     print("created everything")
 
 
 asyncio.run(create_tables())
+
+# drop
+# table if exists
+# prefix_data
+# cascade;
+#
+# drop
+# table if exists
+# cogs_data
+# cascade;
+#
+# drop
+# table if exists
+# voice_text_data
+# cascade;
+#
+# drop
+# table if exists
+# suggestion_data
+# cascade;
+#
+# drop
+# table if exists
+# report_data
+# cascade;
+#
+# drop
+# table if exists
+# ticket_data
+# cascade;
+#
+# drop
+# table if exists
+# tunnel_data
+# cascade;
+#
+# drop
+# table if exists
+# id_data
+# cascade;
+#
+# drop
+# table if exists
+# count_data
+# cascade;
+#
+# drop
+# table if exists
+# leveling_data
+# cascade;
+#
+# drop
+# table if exists
+# application_data
+# cascade;
+#
+# drop
+# table if exists
+# join_to_create_data
+# cascade;
+#
+# drop
+# table if exists
+# reaction_roles_data
+# cascade;
+#
+# drop
+# table if exists
+# bank_data
+# cascade;
+#
+# drop
+# table if exists
+# economy_data
+# cascade;
+#
+# drop
+# table if exists
+# leveling_message_destination_data
+# cascade;
+#
+# drop
+# table if exists
+# gate_keeper_data
+# cascade;
+#
+# drop
+# table if exists
+# black_listed_users_data
+# cascade;
+#
+# drop
+# table if exists
+# jokes_data
+# cascade;
