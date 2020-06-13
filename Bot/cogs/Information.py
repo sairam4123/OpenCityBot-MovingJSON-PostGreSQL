@@ -54,7 +54,7 @@ class MyHelpCommand(commands.HelpCommand):
         #         print(embed.fields)
         #         embed.fields.index(field)
 
-        await self.context.author.send(embed=embed)
+        await self.context.send(embed=embed)
 
     async def send_cog_help(self, cog: commands.Cog):
         if cog.qualified_name != "System":
@@ -93,7 +93,7 @@ class MyBriefCommand(commands.HelpCommand):
                 command in await self.filter_commands(command.root_parent.commands if command.root_parent else command.cog.get_commands())):
             embed = discord.Embed()
             embed.title = f"{self.context.prefix}{command.name}"
-            embed.colour = discord.Colour.dark_green()
+            embed.colour = discord.Colour.lighter_grey()
             embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
             embed.add_field(name="Usage", value=f"`{self.get_command_signature(command)}`")
             embed.add_field(name="Aliases", value=" | ".join([f"`{alias}`" for alias in command.aliases]) if command.aliases else f"`{command.name}`")
@@ -108,11 +108,12 @@ class MyBriefCommand(commands.HelpCommand):
 
     async def send_bot_help(self, mapping: Mapping[Optional[commands.Cog], List[commands.Command]]):
         embed = discord.Embed()
-        embed.colour = discord.Colour.dark_blue()
+        embed.colour = discord.Colour.dark_magenta()
         embed.title = f"Need some brief help, right? Get it here! " + str(len(self.context.bot.commands))
         embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
         for cogs in mapping.keys():
             if cogs is not None:
+                # print(len(await self.filter_commands((cogs.get_commands()))))
                 if len(await self.filter_commands(cogs.get_commands())) != 0:
                     embed.add_field(name=cogs.qualified_name, value=", ".join([
                         f"`{self.context.prefix}{command}`" for command in await self.filter_commands(cogs.get_commands()) if
@@ -129,7 +130,7 @@ class MyBriefCommand(commands.HelpCommand):
     async def send_cog_help(self, cog: commands.Cog):
         if cog.qualified_name != "System":
             embed = discord.Embed()
-            embed.colour = discord.Colour.dark_gold()
+            embed.colour = discord.Colour.dark_teal()
             embed.title = cog.qualified_name
             embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
             for command in cog.get_commands():
@@ -141,7 +142,7 @@ class MyBriefCommand(commands.HelpCommand):
 
     async def send_group_help(self, group: commands.Group):
         embed = discord.Embed()
-        embed.colour = discord.Colour.dark_orange()
+        embed.colour = discord.Colour.teal()
         embed.title = group.qualified_name
         embed.description = f"Usage: `{self.get_command_signature(group)}`\nAliases: {' | '.join([f'`{alias}`' for alias in group.aliases]) if group.aliases else f'`{group.name}`'}\nHelp: {group.help}"
         embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)

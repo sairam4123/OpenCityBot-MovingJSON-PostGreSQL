@@ -15,6 +15,7 @@ class System(commands.Cog):
         return await self.bot.is_owner(ctx.author)
 
     @commands.command()
+    @commands.is_owner()
     async def blacklist(self, ctx: commands.Context, member_or_user: Union[discord.User, discord.Member], *, reason: str):
         black_listed_users = await self.bot.pg_conn.fetchval("""
         SELECT black_listed_users FROM black_listed_users_data
@@ -34,6 +35,7 @@ class System(commands.Cog):
         await ctx.send(f"I have blacklisted **{member_or_user.display_name}#{member_or_user.discriminator}** because of {reason}")
 
     @commands.command()
+    @commands.is_owner()
     async def unblacklist(self, ctx: commands.Context, member_or_user: Union[discord.User, discord.Member], *, reason: str):
         black_listed_users = await self.bot.pg_conn.fetchval("""
             SELECT black_listed_users FROM black_listed_users_data

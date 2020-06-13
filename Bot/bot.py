@@ -95,25 +95,38 @@ for filename in os.listdir('Bot/cogs'):
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+    if hasattr(ctx.command, 'on_error'):
+        return
+
     error = getattr(error, "original", error)
+
     if isinstance(error, commands.CommandNotFound):
         await ctx.send("Command Not found!")
+
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send("You don't have enough permissions.")
+
     elif isinstance(error, commands.CheckAnyFailure):
         await ctx.send("".join(error.args))
+
     elif isinstance(error, commands.CheckFailure):
         await ctx.send("".join(error.args))
+
     elif isinstance(error, commands.PrivateMessageOnly):
         await ctx.send("You're only allowed to use this command in Direct or Private Message only!")
+
     elif isinstance(error, commands.NotOwner):
         await ctx.send("You're not a owner till now!")
+
     elif isinstance(error, commands.NoPrivateMessage):
         await ctx.send("You can't send this commands here!")
+
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.send(f"The command you send is on cooldown! Try again after {format_duration(int(error.retry_after))}.")
+
     elif isinstance(error, discord.Forbidden):
         await ctx.send(error.text)
+
     else:
         raise error
 
@@ -165,16 +178,25 @@ async def my_presence_per_day():
 #
 @bot.check
 async def blacklist_check(ctx: commands.Context):
-    black_listed_users = await bot.pg_conn.fetchval("""
-    SELECT black_listed_users FROM black_listed_users_data
-    """)
-    if not black_listed_users:
-        return True
-    if ctx.author.id not in black_listed_users:
-        return True
-    else:
-        await ctx.send("You're blacklisted from using this bot completely. You can appeal for unblacklisting by DMing my owner.")
-        return False
+    async def inner():
+        black_listed_users = await bot.pg_conn.fetchval("""
+        SELECT black_listed_users FROM black_listed_users_data
+        """)
+        if not black_listed_users:
+            return True
+        if ctx.author.id not in black_listed_users:
+            return True
+        else:
+            await ctx.send("You're blacklisted from using this bot completely. You can appeal for unblacklisting by DMing my owner.")
+            return False
+
+    return commands.check(inner)
+
+
+# @blacklist_check.error
+# async def blacklist_check_error(ctx, error):
+#     if isinstance(error, commands.CheckFailure):
+#         await ctx.send("You're blacklisted from using this bot completely. You can appeal for unblacklisting by DMing my owner.")
 
 
 bot.loop.run_until_complete(connection_for_pg())

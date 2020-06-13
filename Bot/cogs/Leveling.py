@@ -285,7 +285,7 @@ class Leveling(commands.Cog):
         if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in ctx.author.roles:
             await ctx.send(f"{ctx.author.mention} you are a Respected People or you have finished leveling")
         else:
-            await ctx.send(f"{ctx.author.mention} you have {user_xps}xps!")
+            await ctx.send(f"{ctx.author.mention} Good going! You current experience is: `{user_xps}`")
 
     @xps.command(name="view", help="View other persons xps", aliases=['get'])
     async def xps_view(self, ctx, member: Optional[discord.Member] = None):
@@ -338,7 +338,7 @@ class Leveling(commands.Cog):
         if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in ctx.author.roles:
             await ctx.send(f"{ctx.author.mention} you are a Respected People or you have finished leveling.")
         else:
-            await ctx.send(f"{ctx.author.mention} you are in {make_ordinal(user_level)} level!")
+            await ctx.send(f"{ctx.author.mention} You are level `{user_level}` now. Keep participating in the server to climb up in the leaderboard.")
 
     @level.command(name="view", help="View other persons levels", aliases=['get'])
     async def level_view(self, ctx, member: Optional[discord.Member] = None):
