@@ -283,7 +283,7 @@ class Gate_Keeper(commands.Cog):
                 join_message = join_messages[index]
             except (ValueError, IndexError):
                 return await ctx.send("You sent an wrong index. Please try again with correct index or try again without index.")
-        await ctx.send(MessageInterpreter(join_message).interpret_message(ctx.author))
+        await ctx.send(str(MessageInterpreter(join_message).interpret_message(ctx.author)))
 
     @leave_message.command(name="test_message", aliases=['t', 'tm', 'test'])
     async def leave_message_test_message(self, ctx: commands.Context, index: Optional[int] = None):
@@ -300,7 +300,7 @@ class Gate_Keeper(commands.Cog):
                 join_message = leave_messages[index]
             except (ValueError, IndexError):
                 return await ctx.send("You sent an wrong index. Please try again with correct index or try again without index.")
-        await ctx.send(MessageInterpreter(join_message).interpret_message(ctx.author))
+        await ctx.send(str(MessageInterpreter(join_message).interpret_message(ctx.author)))
 
     @ban_message.command(name="test_message", aliases=['t', 'tm', 'test'])
     async def ban_message_test_message(self, ctx: commands.Context, index: Optional[int] = None):
@@ -317,7 +317,23 @@ class Gate_Keeper(commands.Cog):
                 join_message = ban_messages[index]
             except (ValueError, IndexError):
                 return await ctx.send("You sent an wrong index. Please try again with correct index or try again without index.")
-        await ctx.send(MessageInterpreter(join_message).interpret_message(ctx.author))
+        await ctx.send(str(MessageInterpreter(join_message).interpret_message(ctx.author)))
+
+    @commands.Cog.listener()
+    async def on_member_kick(self, member: discord.Member):
+        pass
+
+    @commands.Cog.listener()
+    async def on_member_leave(self, member: discord.Member):
+        pass
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        pass
+
+    @commands.Cog.listener()
+    async def on_member_ban(self, guild, ):
+        pass
 
 
 def setup(bot):
