@@ -20,6 +20,8 @@ class Global_Chat(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.channel.type == discord.ChannelType.private:
+            return
         if message.channel.name == "global_-_-_chat":
             if message.author == self.bot.user:
                 return
