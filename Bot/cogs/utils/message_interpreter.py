@@ -13,7 +13,7 @@ class MessageInterpreter:
     def __init__(self, message):
         self.message = message
 
-    def interpret_message(self, member: discord.Member) -> str:
+    def interpret_message(self, member: discord.Member, **ops) -> str:
         """
         Interprets the given messages using correct values.
 
@@ -22,6 +22,10 @@ class MessageInterpreter:
         :rtype: str
         """
         # print(self.message)
+        try:
+            user_level = ops['level']
+        except KeyError:
+            pass
         message = self.message
         server_to_guild_message = message.replace('server', 'guild')
         index_of_member = make_ordinal(sorted(member.guild.members, key=lambda m: m.joined_at).index(member) + 1)
