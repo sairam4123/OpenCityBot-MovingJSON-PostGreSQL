@@ -1,14 +1,21 @@
 import asyncio
 import random
+from itertools import cycle
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 
 class Fun(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.cycled_jokes = []
+        self.normal_jokes = []
+        self.jokes_update.start()
+
+    def cog_unload(self):
+        self.jokes_update.cancel()
 
     async def cog_check(self, ctx):
         if ctx.channel.type == discord.ChannelType.private:
@@ -21,6 +28,19 @@ class Fun(commands.Cog):
             return True
         return False
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        jokes_data = await self.bot.pg_conn.fetch("""
+                        SELECT questions, answers FROM jokes_data
+                        """)
+        formatted_jokes = []
+        for joke in jokes_data:
+            print(joke)
+            formatted_joke = {'question': joke['questions'], "answer": joke['answers']}
+            formatted_jokes.append(formatted_joke)
+        self.cycled_jokes = cycle(formatted_jokes)
+        self.normal_jokes = formatted_jokes
+
     @commands.command()
     async def joke_add(self, ctx, *, question):
         if question:
@@ -32,7 +52,7 @@ class Fun(commands.Cog):
             try:
                 ans = await self.bot.wait_for('message', check=check, timeout=30)
                 if ans:
-                    await ctx.send("Added the question :thumbsup:")
+                    await ctx.send("Added the joke :thumbsup:")
                     await self.bot.pg_conn.execute("INSERT INTO jokes_data(questions,answers) VALUES($1,$2)", question, ans.content)
                 else:
                     await ctx.send("Please enter the answer")
@@ -49,22 +69,40 @@ class Fun(commands.Cog):
         else:
             raise
 
-    def random_between_cycle_and_random(self, list_1):
-        pass
+    def random_between_cycle_and_random(self):
+        while True:
+            func = random.choice([random.choice, next])
+            list1 = random.choice([self.cycled_jokes, self.normal_jokes])
+            try:
+                test = func(list1)
+            except TypeError:
+                continue
+            else:
+                yield test
 
     @commands.command()
     async def jokes(self, ctx):
-        jokes_data = await self.bot.pg_conn.fetch("""
-        SELECT questions, answers FROM jokes_data
-        """)
-        joke = random.choice(jokes_data)
-        question = joke['questions']
-        answer = joke['answers']
+        joke = next(self.random_between_cycle_and_random())
+        question = joke['question']
+        answer = joke['answer']
         joke_embed = discord.Embed(title="J:laughing:ke", description=question, color=0x0E2FE5)
         await ctx.send(embed=joke_embed)
         await asyncio.sleep(5)
         ans = discord.Embed(description=answer, color=0x0E2FE5)
         await ctx.send(embed=ans)
+
+    @tasks.loop(seconds=1)
+    async def jokes_update(self):
+        jokes_data = await self.bot.pg_conn.fetch("""
+                SELECT questions, answers FROM jokes_data
+                """)
+        formatted_jokes = []
+        for joke in jokes_data:
+            print(joke)
+            formatted_joke = {joke['questions']: joke['answers']}
+            formatted_jokes.append(formatted_joke)
+        self.cycled_jokes = cycle(formatted_jokes)
+        self.normal_jokes = formatted_jokes
 
 
 def setup(bot):
