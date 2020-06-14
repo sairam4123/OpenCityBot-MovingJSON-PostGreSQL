@@ -8,6 +8,20 @@ from .utils.list_manipulation import insert_or_append, pop_or_remove, replace_or
 
 
 class Configuration(commands.Cog):
+    """
+     Configure bot for your server.
+```py
+To change, add, remove or get the prefix:
+    1. {prefix_1}prefix add <prefix> [index] # To add a prefix, to insert one set index.
+                                    (or)
+    1. {prefix_1}prefix remove <prefix> [index] # To remove a prefix, to pop one set index.
+                                    (or)
+    1. {prefix_1}prefix set <prefix> <index> # To set a prefix, needs index to change the prefix correctly.
+                                    (or)
+    1. {prefix_1}prefix # This command gives the prefix of the server.
+```
+
+    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -17,6 +31,11 @@ class Configuration(commands.Cog):
             return is_guild_owner() or await self.bot.is_owner(ctx.author) or ctx.author
         except AttributeError:
             return await self.bot.is_owner(ctx.author)
+
+    # async def cog_command_error(self, ctx, error):
+    #     ctx.cog_handler = True
+    #     if isinstance(error, commands.MissingRequiredArgument):
+    #         await ctx.send("You've sent a bad argument.")
 
     @commands.group(name="prefix", help="Gives you prefixes when sent without subcommands!", invoke_without_command=True)
     async def prefix(self, ctx: commands.Context):

@@ -45,7 +45,7 @@ class MyHelpCommand(commands.HelpCommand):
             if cogs is not None:
                 if len(await self.filter_commands(cogs.get_commands())) != 0:
                     embed.add_field(name=cogs.qualified_name, value=", ".join([
-                        f"`{self.context.prefix}{command}`" for command in await self.filter_commands(cogs.get_commands()) if
+                        f"`{self.clean_prefix}{command}`" for command in await self.filter_commands(cogs.get_commands()) if
                         not command.hidden or await self.context.bot.is_owner(self.context.author)]),
                                     inline=False)
         # for field in embed.fields:
@@ -61,10 +61,12 @@ class MyHelpCommand(commands.HelpCommand):
             embed = discord.Embed()
             embed.colour = discord.Colour.dark_gold()
             embed.title = cog.qualified_name
+            embed.description = cog.__doc__.format(prefix_1=self.clean_prefix) if cog.__doc__ else "Information about this module not available. Owner has forgot to add " \
+                                                                                                   "information to this cog or he may be adding information to the cog."
             embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
             for command in cog.get_commands():
                 if command is not None and command in await self.filter_commands(cog.get_commands()):
-                    embed.add_field(name=command.name, value=command.help, inline=False)
+                    embed.add_field(name=f"`{self.clean_prefix}{command.name}`", value=command.help, inline=False)
             await self.context.send(embed=embed)
         else:
             await self.context.send("There is no cog named System!")
@@ -73,7 +75,9 @@ class MyHelpCommand(commands.HelpCommand):
         embed = discord.Embed()
         embed.colour = discord.Colour.dark_orange()
         embed.title = group.qualified_name
-        embed.description = f"Usage: `{self.get_command_signature(group)}`\nAliases: {' | '.join([f'`{alias}`' for alias in group.aliases]) if group.aliases else f'`{group.name}`'}\nHelp: {group.help}"
+        embed.description = f"Usage: `{self.get_command_signature(group)}`\nAliases: " \
+                            f"{' | '.join([f'`{alias}`' for alias in group.aliases]) if group.aliases else f'`{group.name}`'}" \
+                            f"\nHelp: {group.help}"
         embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
         for command in group.commands:
             if command in await self.filter_commands(group.commands):
@@ -144,7 +148,8 @@ class MyBriefCommand(commands.HelpCommand):
         embed = discord.Embed()
         embed.colour = discord.Colour.teal()
         embed.title = group.qualified_name
-        embed.description = f"Usage: `{self.get_command_signature(group)}`\nAliases: {' | '.join([f'`{alias}`' for alias in group.aliases]) if group.aliases else f'`{group.name}`'}\nHelp: {group.help}"
+        embed.description = f"Usage: `{self.get_command_signature(group)}`\nAliases: " \
+                            f"{' | '.join([f'`{alias}`' for alias in group.aliases]) if group.aliases else f'`{group.name}`'}\nHelp: {group.help}"
         embed.set_author(name=self.context.bot.user.name, icon_url=self.context.bot.user.avatar_url)
         for command in group.commands:
             if command in await self.filter_commands(group.commands):
@@ -318,9 +323,14 @@ class Information(commands.Cog):
         embed.add_field(name="ID", value=guild.id)
         embed.add_field(name="Created at", value=f"{convert_utc_into_ist(guild.created_at)[1]} \n {format_duration(datetime_to_seconds(guild.created_at))} ago", inline=False)
         embed.add_field(name="Channels available",
-                        value=f"<:channel:713041608379203687> {len(guild.text_channels)} \t <:voice:713041608312094731> {len(guild.voice_channels)}\n <:news:713041608559427624> {news_channels} \t <:store_tag1:716660817487200338> {store_channels} \n <:nsfw:716664108392644708> {nsfw_channels} \t <:category1:714347844307517514> {category_channels} \n \n Total: {len(guild.channels)}")
+                        value=f"<:channel:713041608379203687> {len(guild.text_channels)} \t <:voice:713041608312094731> {len(guild.voice_channels)}\n <:news:713041608559427624> "
+                              f"{news_channels} \t <:store_tag1:716660817487200338> {store_channels} \n "
+                              f"<:nsfw:716664108392644708> {nsfw_channels} \t <:category1:714347844307517514> "
+                              f"{category_channels} \n \n Total: {len(guild.channels)}")
         embed.add_field(name="Members count with status",
-                        value=f"<:online:713029272125833337> {online_members} \t <:invisible:713029271391830109> {offline_members} \n <:idle:713029270976331797> {idle_members} \t <:dnd:713029270489792533> {dnd_members} \n \n :robot: {bots} \t <:members:716546232570347560> {humans} \n \n Total: {len(guild.members)}")
+                        value=f"<:online:713029272125833337> {online_members} \t <:invisible:713029271391830109> {offline_members} \n "
+                              f"<:idle:713029270976331797> {idle_members} \t "
+                              f"<:dnd:713029270489792533> {dnd_members} \n \n :robot: {bots} \t <:members:716546232570347560> {humans} \n \n Total: {len(guild.members)}")
         embed.add_field(name="Roles", value=role_mention_str, inline=False)
         embed.add_field(name="Guild Icon URL", value="This server has no icon url" if not bool(guild.icon_url) else f"[Guild Icon URL]({guild.icon_url})")
         embed.add_field(name="Voice Region", value=get_flag_and_voice_server_for_guild(str(guild.region)))
@@ -363,7 +373,9 @@ class Information(commands.Cog):
         embed.add_field(name="Mentionable",
                         value=role.mentionable)
         embed.add_field(name="Members count with status",
-                        value=f"<:online:713029272125833337> {online_members} \t <:invisible:713029271391830109> {offline_members} \n <:idle:713029270976331797> {idle_members} \t <:dnd:713029270489792533> {dnd_members} \n \n :robot: {bots} \t <:members:716546232570347560> {humans} \n \n Total: {len(role.members)}")
+                        value=f"<:online:713029272125833337> {online_members} \t "
+                              f"<:invisible:713029271391830109> {offline_members} \n <:idle:713029270976331797> {idle_members} \t "
+                              f"<:dnd:713029270489792533> {dnd_members} \n \n :robot: {bots} \t <:members:716546232570347560> {humans} \n \n Total: {len(role.members)}")
         embed.add_field(name="Colour", value=f"{role.colour}", inline=False)
         embed.add_field(name="Mention", value=role.mention)
         embed.add_field(name="Position (from top) (with uncategorized category)", value=f"{list(reversed(ctx.guild.roles)).index(role) + 1}")
@@ -374,7 +386,9 @@ class Information(commands.Cog):
     async def info_channel(self, ctx, channel: Optional[Union[discord.TextChannel, discord.VoiceChannel, discord.StoreChannel]]):
         channel = ctx.channel if channel is None else channel
 
-        type_1 = "<:channel:713041608379203687> Text" if channel.type == discord.ChannelType.text else "<:voice:713041608312094731> Voice" if channel.type == discord.ChannelType.voice else "<:news:713041608559427624> News" if channel.type == discord.ChannelType.news else "<> Store"
+        type_1 = "<:channel:713041608379203687> Text" if channel.type == discord.ChannelType.text else \
+            "<:voice:713041608312094731> Voice" if channel.type == discord.ChannelType.voice else \
+                "<:news:713041608559427624> News" if channel.type == discord.ChannelType.news else "<> Store"
         embed = discord.Embed()
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
         embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)

@@ -9,7 +9,19 @@ from .utils.message_interpreter import MessageInterpreter
 
 
 class Gate_Keeper(commands.Cog):
+    """
+    Welcomes and goodbyes users who join and leave in a custom way you say!
 
+```py
+To add a (welcome, goodbye and ban) message:
+    1. {prefix_1}gk (wm|lm|bm) m [add|+] <message> [index] # When setting index will make it work like insert.
+To remove a (welcome, goodbye and ban) message:
+    2. {prefix_1}gk (wm|lm|bm) m [remove|-] <message> [index] # When setting index will make it work like pop.
+To set a (welcome, goodbye and ban) message:
+    3. {prefix_1}gk (wm|lm|bm) m [set|=] <message> <index> # Index is needed for setting the message.
+```
+
+    """
     def __init__(self, bot):
         self.bot = bot
 

@@ -10,7 +10,7 @@ import discord
 from discord.ext import commands, tasks
 from quart import Quart
 
-from Bot.cogs.utils.timeformat_bot import format_duration
+from development.Bot.cogs.utils.timeformat_bot import format_duration
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
@@ -90,13 +90,20 @@ async def on_ready():
 
 for filename in os.listdir('Bot/cogs'):
     if filename.endswith('.py') and not filename.startswith('_'):
-        bot.load_extension(f'Bot.cogs.{filename[:-3]}')
+        bot.load_extension(f'development.Bot.cogs.{filename[:-3]}')
 
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
-    # if hasattr(ctx.command, 'on_error'):
-    #     return
+    if hasattr(ctx.command, 'on_error'):
+        return
+
+    try:
+        if ctx.cog_handler:
+            return
+    except AttributeError:
+        pass
+
     error = getattr(error, "original", error)
 
     if isinstance(error, commands.CommandNotFound):
@@ -135,8 +142,8 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 async def reload_all_extensions(ctx):
     for filename1 in os.listdir('Bot/cogs'):
         if filename1.endswith('.py'):
-            bot.unload_extension(f'Bot.cogs.{filename1[:-3]}')
-            bot.load_extension(f'Bot.cogs.{filename1[:-3]}')
+            bot.unload_extension(f'development.Bot.cogs.{filename1[:-3]}')
+            bot.load_extension(f'development.Bot.cogs.{filename1[:-3]}')
     await ctx.send("Reloaded all extensions!")
 
 
@@ -156,7 +163,7 @@ async def add_guild_to_db():
                 """, guild.id, bot.init_cogs, ["None"])
 
 
-dispatcher = "Bot.cogs.utils.dispatcher"
+dispatcher = "development.Bot.cogs.utils.dispatcher"
 bot.load_extension(dispatcher)
 print('loaded dispatcher successfully')
 

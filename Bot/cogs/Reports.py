@@ -83,15 +83,17 @@ class Reports(commands.Cog):
             SELECT * FROM report_data
             WHERE "reportID" = $1
             """, report_id)
+        if not report:
+            return
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
         report_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
         embed.title = report['reportTitle'] + " Accepted"
         embed.description = (
-                f"**Report for**: {reported_user.mention}\n"
-                f"**Report by**: {ctx.author.mention}\n"
-                f"**Report reason**: {report['reportReason']}"
+            f"**Report for**: {reported_user.mention}\n"
+            f"**Report by**: {ctx.author.mention}\n"
+            f"**Report reason**: {report['reportReason']}"
         )
         if reason:
             embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
@@ -116,6 +118,8 @@ class Reports(commands.Cog):
                 SELECT * FROM report_data
                 WHERE "reportID" = $1
                 """, report_id)
+        if not report:
+            return
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
@@ -149,15 +153,17 @@ class Reports(commands.Cog):
             SELECT * FROM report_data
             WHERE "reportID" = $1
             """, report_id)
+        if not report:
+            return
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
         report_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
         embed.title = report['reportTitle'] + " Fake"
         embed.description = (
-                f"**Report for**: {reported_user.mention}\n"
-                f"**Report by**: {ctx.author.mention}\n"
-                f"**Report reason**: {report['reportReason']}"
+            f"**Report for**: {reported_user.mention}\n"
+            f"**Report by**: {ctx.author.mention}\n"
+            f"**Report reason**: {report['reportReason']}"
         )
         if reason:
             embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
@@ -175,6 +181,41 @@ class Reports(commands.Cog):
             WHERE "reportID" = $1
             """, report_id, "fake", report_moderator)
         await ctx.send(f"Marked report {report_id} as fake because of {reason}")
+
+    @report.command(name="spam", help="Marks a report as spam.")
+    async def report_spam(self, ctx: commands.Context, report_id: int, *, reason: Optional[str] = None):
+        report = await self.bot.pg_conn.fetchrow("""
+            SELECT * FROM report_data
+            WHERE "reportID" = $1
+            """, report_id)
+        if not report:
+            return
+        embed = discord.Embed()
+        author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
+        reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
+        report_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        embed.title = report['reportTitle'] + " spam"
+        embed.description = (
+            f"**Report for**: {reported_user.mention}\n"
+            f"**Report by**: {ctx.author.mention}\n"
+            f"**Report reason**: {report['reportReason']}"
+        )
+        if reason:
+            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+        embed.set_author(name=author.name, icon_url=author.avatar_url)
+        embed.colour = discord.Colour.dark_green()
+        embed.set_footer(text=f"ReportID: {report['reportID']} | {report['reportTime']}")
+        report_guild = self.bot.get_guild(report['reportGuildID'])
+        report_channel = report_guild.get_channel(report['reportChannelID'])
+        report_message = await report_channel.fetch_message(report["reportMessageID"])
+        await report_message.edit(embed=embed)
+        await self.bot.pg_conn.execute("""
+            UPDATE report_data 
+            SET "reportStatus" = $2, 
+            "reportModerator" = $3
+            WHERE "reportID" = $1
+            """, report_id, "spam", report_moderator)
+        await ctx.send(f"Marked report {report_id} as spam because of {reason}")
 
 
 def setup(bot):

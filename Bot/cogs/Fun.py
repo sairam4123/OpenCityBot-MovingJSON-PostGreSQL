@@ -35,7 +35,6 @@ class Fun(commands.Cog):
                         """)
         formatted_jokes = []
         for joke in jokes_data:
-            print(joke)
             formatted_joke = {'question': joke['questions'], "answer": joke['answers']}
             formatted_jokes.append(formatted_joke)
         self.cycled_jokes = cycle(formatted_jokes)
@@ -91,14 +90,13 @@ class Fun(commands.Cog):
         ans = discord.Embed(description=answer, color=0x0E2FE5)
         await ctx.send(embed=ans)
 
-    @tasks.loop(seconds=1)
+    @tasks.loop(seconds=5)
     async def jokes_update(self):
         jokes_data = await self.bot.pg_conn.fetch("""
                 SELECT questions, answers FROM jokes_data
                 """)
         formatted_jokes = []
         for joke in jokes_data:
-            print(joke)
             formatted_joke = {joke['questions']: joke['answers']}
             formatted_jokes.append(formatted_joke)
         self.cycled_jokes = cycle(formatted_jokes)

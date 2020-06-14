@@ -8,6 +8,12 @@ from .utils.list_manipulation import insert_or_append, pop_or_remove
 
 
 class Applications(commands.Cog):
+    """
+    Application related commands.
+
+    To apply:
+        1. `{prefix_1}apply <application_name>
+    """
 
     def __init__(self, bot):
         self.bot = bot
