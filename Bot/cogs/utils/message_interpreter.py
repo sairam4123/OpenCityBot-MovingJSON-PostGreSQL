@@ -34,14 +34,22 @@ class MessageInterpreter:
 
         """
         # print(self.message)
+        user_level = 0
+        user_xps = 0
         try:
             user_level = ops['level']
+            user_xps = ops['xps']
         except KeyError:
             pass
         message = self.message
         server_to_guild_message = message.replace('server', 'guild')
-        index_of_member = make_ordinal(sorted(member.guild.members, key=lambda m: m.joined_at).index(member) + 1)
-        formatted_message = server_to_guild_message.replace("{member.join_count}", index_of_member)
-        formatted_message_1 = formatted_message.format(guild=(member.guild if isinstance(member, discord.Member) else guild), member=member)
+        if "{member.join_count}" in self.message:
+            index_of_member = make_ordinal(sorted(member.guild.members, key=lambda m: m.joined_at).index(member) + 1)
+            server_to_guild_message = server_to_guild_message.replace("{member.join_count}", index_of_member)
+        if "{member.level}" in self.message:
+            server_to_guild_message = server_to_guild_message.replace('{member.level}', user_level)
+        if "{member.xps}" in self.message:
+            server_to_guild_message = server_to_guild_message.replace('{member.xps}', user_xps)
+        formatted_message_1 = server_to_guild_message.format(guild=(member.guild if isinstance(member, discord.Member) else guild), member=member)
 
         return formatted_message_1

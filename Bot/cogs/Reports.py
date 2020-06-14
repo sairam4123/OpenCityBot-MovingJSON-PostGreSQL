@@ -84,7 +84,7 @@ class Reports(commands.Cog):
             WHERE "reportID" = $1
             """, report_id)
         if not report:
-            return
+            return await ctx.send(f"{report_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
@@ -119,7 +119,7 @@ class Reports(commands.Cog):
                 WHERE "reportID" = $1
                 """, report_id)
         if not report:
-            return
+            return await ctx.send(f"{report_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
@@ -154,7 +154,7 @@ class Reports(commands.Cog):
             WHERE "reportID" = $1
             """, report_id)
         if not report:
-            return
+            return await ctx.send(f"{report_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
@@ -189,7 +189,7 @@ class Reports(commands.Cog):
             WHERE "reportID" = $1
             """, report_id)
         if not report:
-            return
+            return await ctx.send(f"{report_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))

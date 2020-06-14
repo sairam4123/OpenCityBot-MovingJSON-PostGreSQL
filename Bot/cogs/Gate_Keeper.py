@@ -1,5 +1,5 @@
 import random
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 from discord.ext import commands
@@ -36,9 +36,17 @@ To set a (welcome, goodbye and ban) message:
             return True
         return False
 
-    @commands.group(name="gate_keeper", aliases=['gk', 'announcer', 'ann'], invoke_without_command=True)
+    @commands.group(name="gate_keeper", aliases=['gk', 'announcer', 'ann'])
     async def gate_keeper(self, ctx: commands.Context):
-        pass
+        check = await self.bot.pg_conn.fetchval("""
+        SELECT * FROM gate_keeper_data
+        WHERE guild_id = $1
+        """, ctx.guild.id)
+        if not check:
+            await self.bot.pg_conn.execute("""
+            INSERT INTO gate_keeper_data (guild_id)
+            VALUES ($1)
+            """, ctx.guild.id)
 
     @gate_keeper.group(name="welcome_message", aliases=['wm'], invoke_without_command=True)
     async def welcome_message(self, ctx: commands.Context):
@@ -332,20 +340,53 @@ To set a (welcome, goodbye and ban) message:
         await ctx.send(str(MessageInterpreter(join_message).interpret_message(ctx.author)))
 
     @commands.Cog.listener()
-    async def on_member_kick(self, member: discord.Member):
-        pass
-
-    @commands.Cog.listener()
     async def on_member_leave(self, member: discord.Member):
-        pass
+        goodbye_messages = await self.bot.pg_conn.fetchval("""
+                                    SELECT leave_message FROM gate_keeper_data
+                                    WHERE guild_id = $1
+                                    """, member.guild.id)
+        leave_channel_id = await self.bot.pg_conn.fetchval("""
+                                    SELECT leave_message_channel_id FROM gate_keeper_data
+                                    WHERE guild_id = $1
+                                    """, member.guild.id)
+        if not goodbye_messages:
+            return
+        goodbye_message = random.choice(goodbye_messages)
+        leave_channel = member.guild.get_channel(leave_channel_id)
+        await leave_channel.send(str(MessageInterpreter(goodbye_message).interpret_message(member)))
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        pass
+        join_messages = await self.bot.pg_conn.fetchval("""
+                            SELECT welcome_message FROM gate_keeper_data
+                            WHERE guild_id = $1
+                            """, member.guild.id)
+        welcome_channel_id = await self.bot.pg_conn.fetchval("""
+                            SELECT welcome_message_channel_id FROM gate_keeper_data
+                            WHERE guild_id = $1
+                            """, member.guild.id)
+        if not join_messages:
+            return
+        join_message = random.choice(join_messages)
+        welcome_channel = member.guild.get_channel(welcome_channel_id)
+        await welcome_channel.send(str(MessageInterpreter(join_message).interpret_message(member)))
 
     @commands.Cog.listener()
-    async def on_member_ban(self, guild, ):
-        pass
+    async def on_member_ban_1(self, user: Union[discord.Member, discord.User], guild: discord.Guild):
+        print("got the event")
+        ban_messages = await self.bot.pg_conn.fetchval("""
+                            SELECT ban_message FROM gate_keeper_data
+                            WHERE guild_id = $1
+                            """, guild.id)
+        ban_channel_id = await self.bot.pg_conn.fetchval("""
+                            SELECT ban_message_channel_id FROM gate_keeper_data
+                            WHERE guild_id = $1
+                            """, guild.id)
+        if not ban_messages:
+            return
+        ban_message = random.choice(ban_messages)
+        ban_channel = guild.get_channel(ban_channel_id)
+        await ban_channel.send(str(MessageInterpreter(ban_message).interpret_message(user, guild=guild)))
 
 
 def setup(bot):

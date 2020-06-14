@@ -85,13 +85,15 @@ class Suggestions(commands.Cog):
         SELECT * FROM suggestion_data
         WHERE "suggestionID" = $1
         """, suggestion_id)
+        if not suggestion:
+            return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
         embed.title = suggestion['suggestionTitle'] + " Approved"
         embed.description = (
-                    f"**Suggestion**: {suggestion['suggestionContent']}\n"
-                    f"**Suggested by**: {author.mention}"
+            f"**Suggestion**: {suggestion['suggestionContent']}\n"
+            f"**Suggested by**: {author.mention}"
         )
         if reason:
             embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
@@ -116,6 +118,8 @@ class Suggestions(commands.Cog):
                 SELECT * FROM suggestion_data
                 WHERE "suggestionID" = $1
                 """, suggestion_id)
+        if not suggestion:
+            return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
@@ -147,14 +151,16 @@ class Suggestions(commands.Cog):
                     SELECT * FROM suggestion_data
                     WHERE "suggestionID" = $1
                     """, suggestion_id)
+        if not suggestion:
+            return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
         embed.title = suggestion[0]['suggestionTitle'] + " Considered"
         embed.description = (
-                f"**Suggestion**: {suggestion['suggestionContent']}\n"
-                f"**Suggested by**: {author.mention}"
-         )
+            f"**Suggestion**: {suggestion['suggestionContent']}\n"
+            f"**Suggested by**: {author.mention}"
+        )
         if reason:
             embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
@@ -178,6 +184,8 @@ class Suggestions(commands.Cog):
                SELECT * FROM suggestion_data
                WHERE "suggestionID" = $1
                """, suggestion_id)
+        if not suggestion:
+            return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"

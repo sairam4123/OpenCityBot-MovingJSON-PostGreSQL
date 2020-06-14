@@ -30,7 +30,7 @@ def insert_or_append(list_1: List[Any], value: Any, index: int = None) -> Tuple[
     """
     if not index:
         list_1.append(value)
-    elif 0 <= index < len(list_1):
+    elif -1 <= index < len(list_1):
         list_1.insert(index, value)
     else:
         raise IndexError("The index you sent is invalid!")
@@ -68,7 +68,7 @@ def pop_or_remove(list_1: List[Any], value: Any, index: int = None) -> Tuple[Lis
     old_index = list_1.index(value)
     if not index:
         list_1.remove(value)
-    elif 0 <= index < len(list_1):
+    elif -1 <= index < len(list_1):
         list_1.pop(index)
     else:
         raise IndexError("The index you sent is invalid!")
@@ -102,7 +102,10 @@ def replace_or_set(list_1: List[Any], value: Any, index: int) -> Tuple[List[Any]
     Tuple[List[Any], Any, int]
 
     """
-    if not 0 >= index > len(list_1):
+    print(len(list_1))
+    print(index)
+    print(-1 < index < len(list_1))
+    if not -1 < index < len(list_1):
         raise IndexError("The index you sent is invalid!")
     list_1[index] = value
     return list_1, value, index

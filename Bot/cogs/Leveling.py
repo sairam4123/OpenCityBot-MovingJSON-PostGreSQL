@@ -8,6 +8,7 @@ from discord.ext import commands
 from .utils.checks import is_guild_owner
 from .utils.color_builder import color_dict_to_discord_color_list
 from .utils.converters import bool1
+from .utils.list_manipulation import insert_or_append, pop_or_remove, replace_or_set
 from .utils.numbers import make_ordinal
 from .utils.permision_builder import permission_builder
 
@@ -15,6 +16,7 @@ from .utils.permision_builder import permission_builder
 class Leveling(commands.Cog):
     """
     Leveling commands, users can level up here. For now leveling is not configurable.
+
 ```py
 To view the (level or xps):
     1. {prefix_1}(level|xps)
@@ -69,7 +71,8 @@ For guild owners or people with admin permissions:
         """, member.guild.id, member.id)
         if not user_data:
             await self.bot.pg_conn.execute("""
-            INSERT INTO leveling_data (guild_id, user_id, level, xps, last_message_time) VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO leveling_data (guild_id, user_id, level, xps, last_message_time) 
+            VALUES ($1, $2, $3, $4, $5)
             """, member.guild.id, member.id, 0, 0, 0)
 
     async def get_destination_for_level_up_messages(self, message: discord.Message) -> Optional[discord.TextChannel]:
@@ -145,7 +148,11 @@ For guild owners or people with admin permissions:
                     WHERE guild_id = $1 AND user_id = $2
                     """, member.guild.id, member.id, new_level)
         if new_level > old_level:
-            level_up_message = f"{member.mention} You've leveled up to level `{new_level}` hurray!"
+            messages = await self.bot.pg_conn.fetchval("""
+            SELECT level_up_messages FROM leveling_message_destination_data
+            WHERE guild_id = $1
+            """, member.guild.id)
+            level_up_message = random.choice(messages)
             level_up_message_destination = await self.get_destination_for_level_up_messages(message)
             if level_up_message_destination is not None:
                 await level_up_message_destination.send(level_up_message)
@@ -267,7 +274,7 @@ For guild owners or people with admin permissions:
 
     @commands.command(help="Creates leveling roles for this server!", hidden=True)
     @commands.check_any(is_guild_owner(), commands.is_owner())
-    @commands.cooldown(1, 6 * 3600)
+    @commands.cooldown(1, 6 * 60 * 60)
     async def create_roles(self, ctx: commands.Context):
         perms_list = list(reversed([list(reversed(perms_list_1)) for perms_list_1 in self.perms_list]))
         if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) not in ctx.guild.roles:
@@ -283,6 +290,7 @@ For guild owners or people with admin permissions:
 
     @commands.command(help="Deletes leveling roles for this server!", hidden=True)
     @commands.check_any(is_guild_owner(), commands.is_owner())
+    @commands.cooldown(1, 6 * 60 * 60)
     async def delete_roles(self, ctx: commands.Context):
         if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in ctx.guild.roles:
             await discord.utils.get(ctx.guild.roles, name="Respected People", color=discord.colour.Colour(0x8600ff), hoist=True, mentionable=True).delete()
@@ -296,6 +304,7 @@ For guild owners or people with admin permissions:
 
     @commands.command(help="Deletes all leveling roles incase of emergency!", hidden=True)
     @commands.is_owner()
+    @commands.cooldown(1, 6 * 60 * 60)
     async def delete_all_roles(self, ctx: commands.Context):
         if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in ctx.guild.roles:
             await discord.utils.get(ctx.guild.roles, name="Respected People").delete()
@@ -435,7 +444,7 @@ For guild owners or people with admin permissions:
         embed.title = f"Leaderboard for {ctx.guild.name}"
         embed.description = msg
         embed.set_author(name=ctx.me.name, icon_url=ctx.me.avatar_url)
-        embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=f"Requested by {ctx.author.display_name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["set_lvlup_channel", "slumc", "lvm"])
@@ -462,6 +471,80 @@ For guild owners or people with admin permissions:
                        WHERE guild_id = $1
                        """, ctx.guild.id)
             await ctx.send("I've disabled the level up message.")
+
+    @commands.command()
+    async def level_up_message_status(self, ctx):
+        enabled = await self.bot.pg_conn.fetchval("""
+        SELECT "enabled?" FROM leveling_message_destination_data
+        WHERE guild_id = $1
+        """, ctx.guild.id)
+        if enabled:
+            await ctx.send("The status of level up message is enabled.")
+        if not enabled:
+            await ctx.send("The status of level up message is disabled.")
+
+    @commands.group(aliases=['lum', 'lvl_up_msg'])
+    async def level_up_message(self, ctx: commands.Context):
+        messages = await self.bot.pg_conn.fetchval("""
+        SELECT level_up_messages FROM leveling_message_destination_data
+        WHERE guild_id = $1
+        """, ctx.guild.id)
+        if not messages:
+            await self.bot.pg_conn.execute("""
+            INSERT INTO leveling_message_destination_data (guild_id)
+            VALUES ($1)
+            """)
+        embed = discord.Embed(title="Available level up messages.")
+        msg = ""
+        for index, message in enumerate(messages, start=1):
+            msg += f"{index}. {message}\n"
+
+        embed.description = msg
+        embed.set_author(name=self.bot.user.display_name, icon_url=self.bot.user.avatar_url)
+        embed.set_footer(text=f"Requested by {ctx.author.display_name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+        await ctx.send(embed=embed)
+
+    @level_up_message.command(name="add", aliases=['+'])
+    async def level_up_message_add(self, ctx: commands.Context, message: str, index: Optional[int]):
+        messages = await self.bot.pg_conn.fetchval("""
+                SELECT level_up_messages FROM leveling_message_destination_data
+                WHERE guild_id = $1
+                """, ctx.guild.id)
+        messages, message, index = insert_or_append(messages, message, index)
+        await self.bot.pg_conn.execute("""
+        UPDATE leveling_message_destination_data
+        SET level_up_messages = $2
+        WHERE guild_id = $1
+        """, ctx.guild.id, messages)
+        await ctx.send(f"Added message {message}.")
+
+    @level_up_message.command(name="remove", aliases=['-'])
+    async def level_up_message_remove(self, ctx: commands.Context, message: str, index: Optional[int]):
+        messages = await self.bot.pg_conn.fetchval("""
+                        SELECT level_up_messages FROM leveling_message_destination_data
+                        WHERE guild_id = $1
+                        """, ctx.guild.id)
+        messages, message, index = pop_or_remove(messages, message, index)
+        await self.bot.pg_conn.execute("""
+                UPDATE leveling_message_destination_data
+                SET level_up_messages = $2
+                WHERE guild_id = $1
+                """, ctx.guild.id, messages)
+        await ctx.send(f"Removed message {message}")
+
+    @level_up_message.command(name="set", aliases=['='])
+    async def level_up_message_set(self, ctx: commands.Context, message: str, index: int):
+        messages = await self.bot.pg_conn.fetchval("""
+                        SELECT level_up_messages FROM leveling_message_destination_data
+                        WHERE guild_id = $1
+                        """, ctx.guild.id)
+        messages, message, index = replace_or_set(messages, message, index)
+        await self.bot.pg_conn.execute("""
+                UPDATE leveling_message_destination_data
+                SET level_up_messages = $2
+                WHERE guild_id = $1
+                """, ctx.guild.id, messages)
+        await ctx.send(f"Set message {message} to {index}")
 
 
 def setup(bot):
