@@ -10,7 +10,7 @@ import discord
 from discord.ext import commands, tasks
 from quart import Quart
 
-from development.Bot.cogs.utils.timeformat_bot import format_duration
+from Bot.cogs.utils.timeformat_bot import format_duration
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
@@ -90,7 +90,7 @@ async def on_ready():
 
 for filename in os.listdir('Bot/cogs'):
     if filename.endswith('.py') and not filename.startswith('_'):
-        bot.load_extension(f'development.Bot.cogs.{filename[:-3]}')
+        bot.load_extension(f'Bot.cogs.{filename[:-3]}')
 
 
 @bot.event
@@ -157,7 +157,7 @@ async def add_guild_to_db():
                 """, guild.id, bot.init_cogs, ["None"])
 
 
-dispatcher = "development.Bot.cogs.utils.dispatcher"
+dispatcher = "Bot.cogs.utils.dispatcher"
 bot.load_extension(dispatcher)
 print('loaded dispatcher successfully')
 
