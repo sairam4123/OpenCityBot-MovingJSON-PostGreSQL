@@ -95,9 +95,8 @@ for filename in os.listdir('Bot/cogs'):
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
-    if hasattr(ctx.command, 'on_error'):
-        return
-
+    # if hasattr(ctx.command, 'on_error'):
+    #     return
     error = getattr(error, "original", error)
 
     if isinstance(error, commands.CommandNotFound):
