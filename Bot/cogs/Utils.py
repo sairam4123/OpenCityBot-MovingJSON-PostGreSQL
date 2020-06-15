@@ -30,7 +30,6 @@ class Utils(commands.Cog):
 
     @staticmethod
     def random_color():
-        # print(binascii.b2a_hex(os.urandom(3)).decode('ascii'))
         return "#" + binascii.b2a_hex(os.urandom(3)).decode('ascii')
 
     @commands.command()
@@ -69,9 +68,6 @@ class Utils(commands.Cog):
     async def quote(self, ctx, message_link: discord.Message):
         embed = discord.Embed()
         embed.title = "Quote"
-        # file = open(r'F:\PyCharm Python Works\OpenCityBot-MovingJSON-PostgreSQL\development\Bot\cogs\images\654080405988966419.png', 'rb')
-        # embed.set_thumbnail(url="attachment://bookmark.png")
-        # file = discord.File(file, 'bookmark.png')
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         embed.description = message_link.content
         embed.add_field(name="Want to view that message?", value=f"[Here it is!]({message_link.jump_url})")

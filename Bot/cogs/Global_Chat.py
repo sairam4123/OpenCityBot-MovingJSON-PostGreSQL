@@ -22,7 +22,7 @@ class Global_Chat(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.channel.type == discord.ChannelType.private:
             return
-        if message.channel.name == "global_-_-_chat":
+        if message.channel.name == "global_-_chat":
             if message.author == self.bot.user:
                 return
             if message.author.bot:
@@ -30,7 +30,7 @@ class Global_Chat(commands.Cog):
             message_1 = message
             for guild in self.bot.guilds:
                 for channel in guild.text_channels:
-                    if channel.name == "global_-_-_chat":
+                    if channel.name == "global_-_chat":
                         embed = discord.Embed(
                             color=message_1.author.color,
                             title=f"Sender: {message_1.author.display_name}#{message_1.author.discriminator}",
