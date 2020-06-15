@@ -455,7 +455,8 @@ For guild owners or people with admin permissions:
         """, ctx.guild.id, channel.id)
         await ctx.send(f"Set the level up message channel to {channel.mention}")
 
-    @commands.command(name="level_up_message_status", aliases=['tlum', 'slums'], help="Toggles the enabling and disabling of level up messages.")
+    @commands.command(name="toggle_level_up_message_status", aliases=['tlum', 'slums', 'set_level_up_message_status'],
+                      help="Toggles the enabling and disabling of level up messages.")
     async def toggle_level_up_message(self, ctx, status: bool1):
         if status:
             await self.bot.pg_conn.execute("""
@@ -472,7 +473,7 @@ For guild owners or people with admin permissions:
                        """, ctx.guild.id)
             await ctx.send("I've disabled the level up message.")
 
-    @commands.command()
+    @commands.command(aliases=['lums', 'lvl_up_message_status'])
     async def level_up_message_status(self, ctx):
         enabled = await self.bot.pg_conn.fetchval("""
         SELECT "enabled?" FROM leveling_message_destination_data
