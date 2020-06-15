@@ -18,11 +18,9 @@ class dispatcher(commands.Cog):
                     return
         try:
             if await member.guild.fetch_ban(member):
-                print('dispatched ban event')
                 self.bot.dispatch('member_ban_1', member, member.guild)
-                print("dispatcher successfully dispatched ban event")
                 return
-        except (discord.HTTPException, discord.Forbidden, discord.NotFound, AttributeError) as e:
+        except (discord.HTTPException, discord.Forbidden, discord.NotFound, AttributeError):
             self.bot.dispatch('member_leave', member)
         else:
             self.bot.dispatch('member_leave', member)
