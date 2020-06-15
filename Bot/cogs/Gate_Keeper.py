@@ -374,7 +374,6 @@ To set a (welcome, goodbye and ban) message:
 
     @commands.Cog.listener()
     async def on_member_ban_1(self, user: Union[discord.Member, discord.User], guild: discord.Guild):
-        print("got the event")
         ban_messages = await self.bot.pg_conn.fetchval("""
                             SELECT ban_message FROM gate_keeper_data
                             WHERE guild_id = $1

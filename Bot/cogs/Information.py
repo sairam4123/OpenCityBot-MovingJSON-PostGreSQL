@@ -387,9 +387,9 @@ class Information(commands.Cog):
         channel = ctx.channel if channel is None else channel
 
         type_1 = ("<:channel:713041608379203687> Text" if channel.type == discord.ChannelType.text
-                  else "<:voice:713041608312094731> Voice"
-        if channel.type == discord.ChannelType.voice else "<:news:713041608559427624> News"
-        if channel.type == discord.ChannelType.news else "<> Store"
+                  else "<:voice:713041608312094731> Voice" if channel.type == discord.ChannelType.voice
+        else "<:news:713041608559427624> News" if channel.type == discord.ChannelType.news
+        else "<> Store"
                   )
         embed = discord.Embed()
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
