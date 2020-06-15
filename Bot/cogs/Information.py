@@ -257,7 +257,7 @@ class Information(commands.Cog):
         embed = discord.Embed()
         embed.set_author(name=ctx.me.display_name, icon_url=ctx.me.avatar_url)
         embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-        embed.title = f"Info of Me"
+        embed.title = f"My Info"
         embed.add_field(name="Python version", value=sys.version.split(' ')[0])
         embed.add_field(name="Discord.py version", value=discord.__version__)
         embed.add_field(name="Servers count", value=f"{len(self.bot.guilds)}")
@@ -408,19 +408,6 @@ class Information(commands.Cog):
         embed.add_field(name="Position (from bottom)", value=f"{ctx.guild.channels.index(channel) + 1}")
         embed.add_field(name="Slowmode", value=channel.slowmode_delay)
         embed.add_field(name="Channel Topic", value="Channel topic not available." if not channel.topic else channel.topic)
-        await ctx.send(embed=embed)
-
-    @commands.command(help="Gives the avatar.", name="avatar", aliases=['av'])
-    async def avatar(self, ctx, member: Optional[Union[discord.Member, discord.User]]):
-        member = ctx.author if not member else member
-        embed = discord.Embed(title=f"Avatar for {member.name}#{member.discriminator}")
-        png = f"[png]({member.avatar_url_as(format='png')})"
-        jpg = f"[jpg]({member.avatar_url_as(format='jpg')})"
-        webp = f"[webp]({member.avatar_url_as(format='webp')})"
-        jepg = f"[jepg]({member.avatar_url_as(format='jpeg')})"
-        gif = f"[gif]({member.avatar_url_as(format='gif')})" if member.is_avatar_animated() else "|| gif not available ||"
-        embed.add_field(name="Link as", value=f"{png} | {jpg} | {webp} | {gif} | {jepg}")
-        embed.set_image(url=member.avatar_url)
         await ctx.send(embed=embed)
 
     @info.command(name="emoji", aliases=['e'], help="Gives the info the given emoji.")

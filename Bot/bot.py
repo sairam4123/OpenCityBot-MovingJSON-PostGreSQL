@@ -107,10 +107,12 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     error = getattr(error, "original", error)
 
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send("Command Not found!")
+        await ctx.send("I am not able to find the command, you asked me, in my registered commands list.")
 
     elif isinstance(error, commands.MissingPermissions):
-        await ctx.send("You don't have enough permissions.")
+        await ctx.send("Sorry, I think you need to ask your server owner or people with role higher than you to give the needed permission.\n"
+                       "These permissions are needed to run the command: {}".format(
+            '\n'.join([f"{index}. {permission.replace('guild', 'server').replace('_', ' ').title()}" for index, permission in enumerate(error.missing_perms, start=1)])))
 
     elif isinstance(error, commands.CheckAnyFailure):
         await ctx.send("".join(error.args))
@@ -184,19 +186,18 @@ async def my_presence_per_day():
 #
 @bot.check
 async def blacklist_check(ctx: commands.Context):
-    async def inner():
-        black_listed_users = await bot.pg_conn.fetchval("""
-        SELECT black_listed_users FROM black_listed_users_data
-        """)
-        if not black_listed_users:
-            return True
-        if ctx.author.id not in black_listed_users:
-            return True
-        else:
-            await ctx.send("You're blacklisted from using this bot completely. You can appeal for unblacklisting by DMing my owner.")
-            return False
-
-    return commands.check(inner)
+    if await bot.is_owner(ctx.author):
+        return True
+    black_listed_users = await bot.pg_conn.fetchval("""
+    SELECT black_listed_users FROM black_listed_users_data
+    """)
+    if not black_listed_users:
+        return True
+    if ctx.author.id not in black_listed_users:
+        return True
+    else:
+        await ctx.send("You're blacklisted from using this bot completely. You can appeal for unblacklisting by DMing my owner.")
+        return False
 
 
 # @blacklist_check.error
