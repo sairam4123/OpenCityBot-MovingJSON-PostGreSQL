@@ -1,3 +1,4 @@
+
 import datetime
 import os
 import random
@@ -5,6 +6,7 @@ from itertools import cycle
 
 import asyncpg
 import discord
+from Bot.cogs.utils.timeformat_bot import format_duration
 from discord.ext import commands, tasks
 from quart import Quart
 
@@ -12,7 +14,6 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
 
 BOT_IS_READY = False
-
 PREFIX = os.getenv('DEFAULT_PREFIX')
 DELIMITER = os.getenv('DEFAULT_DELIMITER_FOR_ENV')
 TICKET_EMOJI = os.getenv('DEFAULT_TICKET_EMOJI')
@@ -40,14 +41,6 @@ async def get_prefix(bot_1, message):
 bot = commands.Bot(command_prefix=get_prefix)
 app = Quart(__name__)
 
-str_text = "OpenCity • Type {}help to get started"
-ACTIVITIES = cycle([discord.Game(name=str_text),
-                    discord.Streaming(name=str_text, url="https://www.twitch.tv/opencitybotdiscord"),
-                    discord.Activity(type=discord.ActivityType.listening, name=str_text),
-                    discord.Activity(type=discord.ActivityType.watching, name=str_text)
-                    ])
-STATUSES = cycle([discord.Status.online, discord.Status.idle, discord.Status.do_not_disturb])
-
 
 @app.route("/")
 def hello():
@@ -58,9 +51,18 @@ bot.oauth_url = discord.utils.oauth_url(client_id=CLIENT_ID, permissions=discord
 bot.init_cogs = [f'Bot.cogs.{filename[:-3]}' for filename in os.listdir('Bot/cogs') if filename.endswith('.py')]
 bot.invite_url = discord.utils.oauth_url(client_id=CLIENT_ID, permissions=discord.Permissions(8))
 bot.start_time = datetime.datetime.utcnow()
+bot.credits = ['NameKhan72', 'SQWiperYT', 'Wizard BINAY', 'Sairam']
 bot.prefix_default = PREFIX.split(DELIMITER)
 bot.start_number = 1000000000000000
 bot.ticket_emoji_default = TICKET_EMOJI.split(DELIMITER)
+
+str_text = "OpenCity • Type {}help to get started"
+ACTIVITIES = cycle([discord.Game(name=str_text),
+                    discord.Streaming(name=str_text, url="https://www.twitch.tv/opencitybotdiscord"),
+                    discord.Activity(type=discord.ActivityType.listening, name=str_text),
+                    discord.Activity(type=discord.ActivityType.watching, name=str_text)
+                    ])
+STATUSES = cycle([discord.Status.online, discord.Status.idle, discord.Status.do_not_disturb])
 
 
 async def connection_for_pg():
@@ -70,6 +72,8 @@ async def connection_for_pg():
 @bot.event
 async def on_ready():
     global BOT_IS_READY
+    random_user = random.choice(bot.users)
+    await bot.is_owner(random_user)
     for guild_index, guild in enumerate(bot.guilds):
         print(
             f'{bot.user} is connected to the following guild:\n'
@@ -80,10 +84,7 @@ async def on_ready():
         print(f'Guild Members of {guild.name} are:\n - {members}')
         if guild_index != (len(bot.guilds) - 1):
             print('\n\n\n', end="")
-        BOT_IS_READY = True
-    random_user = random.choice(bot.users)
-    await bot.is_owner(random_user)
-
+    BOT_IS_READY = True
 
 for filename in os.listdir('Bot/cogs'):
     if filename.endswith('.py') and not filename.startswith('_'):
@@ -92,22 +93,44 @@ for filename in os.listdir('Bot/cogs'):
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: commands.CommandError):
+    if hasattr(ctx.command, 'on_error'):
+        return
+
+    try:
+        if ctx.cog_handler:
+            return
+    except AttributeError:
+        pass
+
+    error = getattr(error, "original", error)
+
     if isinstance(error, commands.CommandNotFound):
         await ctx.send("Command Not found!")
+
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send("You don't have enough permissions.")
+
     elif isinstance(error, commands.CheckAnyFailure):
         await ctx.send("".join(error.args))
+
     elif isinstance(error, commands.CheckFailure):
         await ctx.send("".join(error.args))
+
     elif isinstance(error, commands.PrivateMessageOnly):
         await ctx.send("You're only allowed to use this command in Direct or Private Message only!")
+
     elif isinstance(error, commands.NotOwner):
         await ctx.send("You're not a owner till now!")
+
     elif isinstance(error, commands.NoPrivateMessage):
         await ctx.send("You can't send this commands here!")
+
     elif isinstance(error, commands.CommandOnCooldown):
-        await ctx.send("The command you send is on cooldown!")
+        await ctx.send(f"The command you send is on cooldown! Try again after {format_duration(int(error.retry_after))}.")
+
+    elif isinstance(error, discord.Forbidden):
+        await ctx.send(error.text)
+
     else:
         raise error
 
@@ -157,6 +180,29 @@ async def my_presence_per_day():
 # async def add_guild_to_db_error(error):
 #     raise error
 #
+@bot.check
+async def blacklist_check(ctx: commands.Context):
+    async def inner():
+        black_listed_users = await bot.pg_conn.fetchval("""
+        SELECT black_listed_users FROM black_listed_users_data
+        """)
+        if not black_listed_users:
+            return True
+        if ctx.author.id not in black_listed_users:
+            return True
+        else:
+            await ctx.send("You're blacklisted from using this bot completely. You can appeal for unblacklisting by DMing my owner.")
+            return False
+
+    return commands.check(inner)
+
+
+# @blacklist_check.error
+# async def blacklist_check_error(ctx, error):
+#     if isinstance(error, commands.CheckFailure):
+#         await ctx.send("You're blacklisted from using this bot completely. You can appeal for unblacklisting by DMing my owner.")
+
+
 bot.loop.run_until_complete(connection_for_pg())
 bot.loop.create_task(app.run_task(host=IP_ADDRESS, port=int(PORT_NUMBER)))
 my_presence_per_day.start()

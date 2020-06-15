@@ -1,8 +1,9 @@
 from typing import Optional
 
 import discord
-from Bot.cogs.utils.timeformat_bot import indian_standard_time_now
 from discord.ext import commands
+
+from .utils.timeformat_bot import indian_standard_time_now
 
 
 class Suggestions(commands.Cog):
@@ -84,6 +85,8 @@ class Suggestions(commands.Cog):
         SELECT * FROM suggestion_data
         WHERE "suggestionID" = $1
         """, suggestion_id)
+        if not suggestion:
+            return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
@@ -115,6 +118,8 @@ class Suggestions(commands.Cog):
                 SELECT * FROM suggestion_data
                 WHERE "suggestionID" = $1
                 """, suggestion_id)
+        if not suggestion:
+            return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
@@ -146,6 +151,8 @@ class Suggestions(commands.Cog):
                     SELECT * FROM suggestion_data
                     WHERE "suggestionID" = $1
                     """, suggestion_id)
+        if not suggestion:
+            return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
@@ -177,6 +184,8 @@ class Suggestions(commands.Cog):
                SELECT * FROM suggestion_data
                WHERE "suggestionID" = $1
                """, suggestion_id)
+        if not suggestion:
+            return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
         suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"

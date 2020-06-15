@@ -44,6 +44,7 @@ class Moderation(commands.Cog):
     @commands.has_guild_permissions(manage_roles=True)
     async def mute(self, ctx: discord.ext.commands.context.Context, member: discord.Member, *, reason="No reason provided"):
         role = discord.utils.get(ctx.guild.roles, name='Muted Members')
+        # self.bot.dispatch('member_mute', member)
         await member.add_roles(role, reason=reason)
         await ctx.send(f"{member} is muted because of {reason}.")
 
@@ -70,7 +71,7 @@ class Moderation(commands.Cog):
 
     @commands.command(help="Purges the given amount of messages", aliases=['clear'])
     @commands.has_guild_permissions(manage_messages=True)
-    async def purge(self, ctx: discord.ext.commands.context.Context, amount_of_messages=1, author: Optional[discord.Member] = None):
+    async def purge(self, ctx: discord.ext.commands.context.Context, amount_of_messages=11110, author: Optional[discord.Member] = None):
         await ctx.channel.purge(limit=amount_of_messages, check=lambda m: True if author is None else m.author == author)
 
     @commands.command(help="Get the status!")

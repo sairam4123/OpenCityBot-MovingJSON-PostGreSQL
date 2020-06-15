@@ -26,7 +26,8 @@ class Join_To_Create_Voice_Channel(commands.Cog):
                 await member.move_to(voice_channel)
         if before.channel and not after.channel:
             voice_channel1 = discord.utils.get(member.guild.voice_channels, name=f"{member.display_name}'s channel")
-            await voice_channel1.delete()
+            if voice_channel1:
+                await voice_channel1.delete()
 
 
 def setup(bot):
