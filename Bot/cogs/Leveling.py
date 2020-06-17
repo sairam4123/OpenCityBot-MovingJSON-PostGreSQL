@@ -72,8 +72,8 @@ For guild owners or people with admin permissions:
         if not user_data:
             await self.bot.pg_conn.execute("""
             INSERT INTO leveling_data (guild_id, user_id, level, xps, last_message_time) 
-            VALUES ($1, $2, $3, $4, $5)
-            """, member.guild.id, member.id, 0, 0, 0)
+            VALUES ($1, $2, 0, 0, 0)
+            """, member.guild.id, member.id)
 
     async def get_destination_for_level_up_messages(self, message: discord.Message) -> Optional[discord.TextChannel]:
         destination_channel_id = await self.bot.pg_conn.fetchval("""
@@ -152,7 +152,12 @@ For guild owners or people with admin permissions:
             SELECT level_up_messages FROM leveling_message_destination_data
             WHERE guild_id = $1
             """, member.guild.id)
-            level_up_message = random.choice(messages)
+            if messages is not None:
+                level_up_message = random.choice(messages)
+            else:
+                level_up_message = (f"{member.mention} "
+                                    f"You've leveled up to level `{new_level}` hurray!"
+                                    )
             level_up_message_destination = await self.get_destination_for_level_up_messages(message)
             if level_up_message_destination is not None:
                 await level_up_message_destination.send(level_up_message)

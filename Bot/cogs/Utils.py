@@ -1,9 +1,10 @@
+import asyncio
 import binascii
 import colorsys
 import io
 import os
 import pathlib
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 from PIL import Image
@@ -72,6 +73,29 @@ class Utils(commands.Cog):
         embed.description = message_link.content
         embed.add_field(name="Want to view that message?", value=f"[Here it is!]({message_link.jump_url})")
         await ctx.send(embed=embed)
+
+    @commands.command(help="Gives the avatar.", name="avatar", aliases=['av'])
+    async def avatar(self, ctx, member: Optional[Union[discord.Member, discord.User]]):
+        member = ctx.author if not member else member
+        embed = discord.Embed(title=f"Avatar for {member.name}#{member.discriminator}")
+        png = f"[png]({member.avatar_url_as(format='png')})"
+        jpg = f"[jpg]({member.avatar_url_as(format='jpg')})"
+        webp = f"[webp]({member.avatar_url_as(format='webp')})"
+        jepg = f"[jepg]({member.avatar_url_as(format='jpeg')})"
+        gif = f"[gif]({member.avatar_url_as(format='gif')})" if member.is_avatar_animated() else "|| gif not available ||"
+        embed.add_field(name="Link as", value=f"{png} | {jpg} | {webp} | {gif} | {jepg}")
+        embed.set_image(url=member.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=['pe', 'p_e', 'pin_all', 'pa', 'p_a'])
+    async def pin_everything(self, ctx: commands.Context, channel: discord.TextChannel):
+        count = 0
+        async for message in channel.history():
+            await message.pin()
+            count += 1
+            await asyncio.sleep(0.25)
+        await channel.purge(limit=count)
+        await ctx.send("Pinned all the messages in the channel. And deleted the pin message.")
 
 
 def setup(bot):
