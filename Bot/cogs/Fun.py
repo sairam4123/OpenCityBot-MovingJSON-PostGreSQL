@@ -52,7 +52,10 @@ class Fun(commands.Cog):
                 ans = await self.bot.wait_for('message', check=check, timeout=30)
                 if ans:
                     await ctx.send("Added the joke :thumbsup:")
-                    await self.bot.pg_conn.execute("INSERT INTO jokes_data(questions,answers) VALUES($1,$2)", question, ans.content)
+                    await self.bot.pg_conn.execute("""
+                        INSERT INTO jokes_data
+                        VALUES($1,$2)
+                    """, question, ans.content)
                 else:
                     await ctx.send("Please enter the answer")
                 # await self.bot.pg_conn.execute("INSERT INTO jokes_data(questions,answers) VALUES($1,$2)", question, ans.content)
@@ -87,8 +90,8 @@ class Fun(commands.Cog):
         joke_embed = discord.Embed(title="J:laughing:ke", description=question, color=0x0E2FE5)
         await ctx.send(embed=joke_embed)
         await asyncio.sleep(5)
-        ans = discord.Embed(description=answer, color=0x0E2FE5)
-        await ctx.send(embed=ans)
+        joke_answer = discord.Embed(description=answer, color=0x0E2FE5)
+        await ctx.send(embed=joke_answer)
 
     @tasks.loop(seconds=5)
     async def jokes_update(self):

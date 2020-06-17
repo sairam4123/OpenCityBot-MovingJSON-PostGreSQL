@@ -3,6 +3,7 @@ from typing import Optional, Union
 import discord
 from discord.ext import commands
 
+from .utils.emoji_adder import add_emojis_to_message
 from .utils.timeformat_bot import indian_standard_time_now
 
 
@@ -33,17 +34,6 @@ class Reports(commands.Cog):
             SELECT report_number FROM count_data
             WHERE guild_id = $1
             """, ctx.guild.id)
-        if not report_id:
-            await self.bot.pg_conn.execute("""
-                INSERT INTO id_data (report_id)
-                VALUES ($1)
-                """, self.bot.start_number)
-        if not report_number:
-            await self.bot.pg_conn.execute("""
-                UPDATE count_data
-                SET report_number = $1
-                WHERE guild_id = $2
-                """, 1, ctx.guild.id)
         title = f"Report #{report_number}"
         embed = discord.Embed(
             title=title,
@@ -56,9 +46,7 @@ class Reports(commands.Cog):
         ).set_footer(text=f"ReportID: {report_id} | {indian_standard_time_now()[1]}")
         embed.set_author(name=f"{ctx.author.name}", icon_url=f"{ctx.author.avatar_url}")
         message_sent = await ctx.send(embed=embed)
-        await message_sent.add_reaction(f":_tick:705003237174018179")
-        await message_sent.add_reaction(f":_neutral:705003236687609936")
-        await message_sent.add_reaction(f":_cross:705003237174018158")
+        await add_emojis_to_message([":_tick:705003237174018179", '":_neutral:705003236687609936", '":_cross:705003237174018158"], message_sent)
         await self.bot.pg_conn.execute("""
             INSERT INTO report_data
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -67,14 +55,14 @@ class Reports(commands.Cog):
                                        f"{reported_user.name}#{reported_user.discriminator} ({reported_user.id})", "Null")
         await self.bot.pg_conn.execute("""
             UPDATE id_data
-            SET report_id = $1
+            SET report_id = report_id + 1
             WHERE row_id = 1
-            """, int(int(report_id) + int(1)))
+            """)
         await self.bot.pg_conn.execute("""
             UPDATE count_data
-            SET report_number = $1
-            WHERE guild_id = $2
-            """, int(report_number) + 1, ctx.guild.id)
+            SET report_number = report_number + 1
+            WHERE guild_id = $1
+            """, ctx.guild.id)
         await ctx.author.send("Your report is sent!, This is how your report look like!", embed=embed)
 
     @report.command(name="accept", help="Accepts a report.")
@@ -106,10 +94,10 @@ class Reports(commands.Cog):
         await report_message.edit(embed=embed)
         await self.bot.pg_conn.execute("""
             UPDATE report_data 
-            SET "reportStatus" = $2, 
-            "reportModerator" = $3
+            SET "reportStatus" = 'accepted', 
+            "reportModerator" = $2
             WHERE "reportID" = $1
-            """, report_id, "accepted", report_moderator)
+            """, report_id, report_moderator)
         await ctx.send(f"Accepted report {report_id} because of {reason}")
 
     @report.command(name="decline", help="Declines a report.")

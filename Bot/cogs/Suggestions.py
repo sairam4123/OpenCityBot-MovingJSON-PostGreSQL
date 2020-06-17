@@ -3,6 +3,7 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
+from .utils.emoji_adder import add_emojis_to_message
 from .utils.timeformat_bot import indian_standard_time_now
 
 
@@ -37,16 +38,6 @@ class Suggestions(commands.Cog):
         SELECT suggestion_number FROM count_data
         WHERE guild_id = $1
         """, ctx.guild.id)
-        if not suggestion_id:
-            await self.bot.pg_conn.execute("""
-            INSERT INTO id_data (suggestion_id, row_id)
-            VALUES ($1, $2)
-            """, self.bot.start_number, 1)
-        if not suggestion_number:
-            await self.bot.pg_conn.execute("""
-            INSERT INTO count_data (guild_id, suggestion_number)
-            VALUES ($1, $2)
-            """, ctx.guild.id, 1)
         title = f"Suggestion #{suggestion_number}"
         embed = discord.Embed(
             title=title,
@@ -58,10 +49,7 @@ class Suggestions(commands.Cog):
         ).set_footer(text=f"SuggestionID: {suggestion_id} | {indian_standard_time_now()[1]}")
         embed.set_author(name=f"{ctx.author.name}", icon_url=f"{ctx.author.avatar_url}")
         message_sent = await ctx.send(embed=embed)
-        await message_sent.add_reaction(f":_tick:705003237174018179")
-        await message_sent.add_reaction(f":_neutral:705003236687609936")
-        await message_sent.add_reaction(f":_cross:705003237174018158")
-        await message_sent.add_reaction(f":_already_there:705003236897194004")
+        await add_emojis_to_message([":_tick:705003237174018179", ":_neutral:705003236687609936", ":_cross:705003237174018158", ":_already_there:705003236897194004"], message_sent)
         await self.bot.pg_conn.execute("""
         INSERT INTO suggestion_data
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -69,14 +57,14 @@ class Suggestions(commands.Cog):
                                        message_sent.channel.id, message_sent.guild.id, type1, "waiting", "Null")
         await self.bot.pg_conn.execute("""
         UPDATE id_data
-        SET suggestion_id = $1
-        WHERE row_id = 0
-        """, int(suggestion_id) + 1)
+        SET suggestion_id = suggestion_id + 1
+        WHERE row_id = 1
+        """)
         await self.bot.pg_conn.execute("""
         UPDATE count_data
-        SET suggestion_number = $1
-        WHERE guild_id = $2
-        """, int(suggestion_number) + 1, ctx.guild.id)
+        SET suggestion_number = suggestion_number + 1
+        WHERE guild_id = $1
+        """, ctx.guild.id)
         await ctx.author.send("Your suggestion is sent!, This is how your suggestion look like!", embed=embed)
 
     @suggestion.command(name="approve", help="Approves a suggestion.")

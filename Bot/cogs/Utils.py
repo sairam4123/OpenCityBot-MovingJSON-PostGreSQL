@@ -1,3 +1,4 @@
+import asyncio
 import binascii
 import colorsys
 import io
@@ -85,6 +86,16 @@ class Utils(commands.Cog):
         embed.add_field(name="Link as", value=f"{png} | {jpg} | {webp} | {gif} | {jepg}")
         embed.set_image(url=member.avatar_url)
         await ctx.send(embed=embed)
+
+    @commands.command(aliases=['pe', 'p_e', 'pin_all', 'pa', 'p_a'])
+    async def pin_everything(self, ctx: commands.Context, channel: discord.TextChannel):
+        count = 0
+        async for message in channel.history():
+            await message.pin()
+            count += 1
+            await asyncio.sleep(0.25)
+        await channel.purge(limit=count)
+        await ctx.send("Pinned all the messages in the channel. And deleted the pin message.")
 
 
 def setup(bot):

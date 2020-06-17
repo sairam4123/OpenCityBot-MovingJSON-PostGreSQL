@@ -386,10 +386,12 @@ class Information(commands.Cog):
     async def info_channel(self, ctx, channel: Optional[Union[discord.TextChannel, discord.VoiceChannel, discord.StoreChannel]]):
         channel = ctx.channel if channel is None else channel
 
-        type_1 = ("<:channel:713041608379203687> Text" if channel.type == discord.ChannelType.text
-                  else "<:voice:713041608312094731> Voice" if channel.type == discord.ChannelType.voice
-        else "<:news:713041608559427624> News" if channel.type == discord.ChannelType.news
-        else "<> Store"
+        type_1 = ("None"
+                  if channel is None else "<:channel:713041608379203687> Text"
+        if channel.type == discord.ChannelType.text else "<:voice:713041608312094731> Voice"
+        if channel.type == discord.ChannelType.voice else "<:news:713041608559427624> News"
+        if channel.type == discord.ChannelType.news else "<:store_tag1:716660817487200338> Store"
+        if channel.type == discord.ChannelType.store else "<:category1:714347844307517514> Category"
                   )
         embed = discord.Embed()
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
