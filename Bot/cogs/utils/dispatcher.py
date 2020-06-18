@@ -35,6 +35,10 @@ class dispatcher(commands.Cog):
             if not after.channel == before.channel:
                 self.bot.dispatch('member_voice_channel_switch', member, before.channel, after.channel)
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        self.bot.dispatch('message_create', message)
+
 
 def setup(bot):
     bot.add_cog(dispatcher(bot))

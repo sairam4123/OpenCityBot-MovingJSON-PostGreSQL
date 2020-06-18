@@ -74,16 +74,21 @@ async def on_ready():
     global BOT_IS_READY
     random_user = random.choice(bot.users)
     await bot.is_owner(random_user)
+    print(f'\n\n{bot.user} (id: {bot.user.id}) is connected to the following guilds:\n', end="")
     for guild_index, guild in enumerate(bot.guilds):
         print(
-            f'{bot.user} is connected to the following guild:\n'
-            f'{guild.name}(id: {guild.id})'
+            f' - {guild.name} (id: {guild.id})'
         )
-
-        members = '\n - '.join([member.name for member in guild.members])
+    print("\n")
+    for guild_index, guild in enumerate(bot.guilds):
+        members = '\n - '.join([f"{member} (id: {member.id})" for member in guild.members])
+        print(f'{guild.name} (id: {guild.id})')
         print(f'Guild Members of {guild.name} are:\n - {members}')
+        print(f"The above server has {guild.member_count} members")
         if guild_index != (len(bot.guilds) - 1):
             print('\n\n\n', end="")
+
+    print(f"\n\nI can view {len(bot.users)} members in {len(bot.guilds)} guilds.")
     BOT_IS_READY = True
 
 

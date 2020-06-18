@@ -21,7 +21,7 @@ class Mention_Reply(commands.Cog):
         return False
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message_create(self, message: discord.Message):
         try:
             prefix = random.choice(await self.bot.get_prefix(message))
             enabled = await self.bot.pg_conn.fetchval("""

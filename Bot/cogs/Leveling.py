@@ -213,13 +213,14 @@ For guild owners or people with admin permissions:
             if f"Bot.cogs.{self.qualified_name}" in enabled:
                 if message.author == self.bot.user:
                     return
-                await self.update_data(message.author)
-                if discord.utils.find(lambda r: r.name == 'Respected People', message.guild.roles) not in message.author.roles and message.author.bot is False:
-                    user_category_1 = await self.return_user_category(message.author)
-                    await self.update_xps(message.author, message)
-                    old_level, new_level = await self.update_level(message.author)
-                    await self.give_roles_according_to_level(user_category_1, message.author, old_level, new_level)
-                    await self.send_level_up_message(message.author, message, old_level, new_level)
+                if not isinstance(message.author, discord.User):
+                    await self.update_data(message.author)
+                    if discord.utils.find(lambda r: r.name == 'Respected People', message.guild.roles) not in message.author.roles and message.author.bot is False:
+                        user_category_1 = await self.return_user_category(message.author)
+                        await self.update_xps(message.author, message)
+                        old_level, new_level = await self.update_level(message.author)
+                        await self.give_roles_according_to_level(user_category_1, message.author, old_level, new_level)
+                        await self.send_level_up_message(message.author, message, old_level, new_level)
 
     async def check_new_role(self, before, after):
         new_role = next(role for role in after.roles if role not in before.roles)
