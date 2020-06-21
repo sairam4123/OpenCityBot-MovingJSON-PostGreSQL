@@ -165,7 +165,7 @@ For guild owners or people with admin permissions:
                 await message.channel.send(level_up_message)
 
     async def update_xps(self, member: discord.Member, message: discord.Message):
-        if (int(time.time()) - int(await self.get_last_message_time(member))) > 1 and not str(message.content).startswith(tuple(await self.bot.get_prefix(message))):
+        if (int(time.time()) - int(await self.get_last_message_time(member))) > 30 and not str(message.content).startswith(tuple(await self.bot.get_prefix(message))):
             await self.bot.pg_conn.execute("""
             UPDATE leveling_data
             SET xps = $3,

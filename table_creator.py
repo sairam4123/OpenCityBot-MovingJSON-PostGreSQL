@@ -233,7 +233,33 @@ async def create_tables():
 
     """)
     print("created everything")
+    await pg_conn.execute("""
+    
+alter table "public"."leveling_message_destination_data" drop column "message_string";
 
+alter table "public"."leveling_message_destination_data" add column "level_up_messages" text[];
+
+alter table "public"."ticket_data" drop column "ticketUser";
+
+alter table "public"."ticket_data" add column "ticketChannelID" bigint;
+
+alter table "public"."ticket_data" add column "ticketModerator" text;
+
+alter table "public"."ticket_data" add column "ticketUsers" text[];
+
+alter table "public"."ticket_data" alter column "ticketGuildID" set data type bigint using "ticketGuildID"::bigint;
+
+alter table "public"."tunnel_data" drop column "tunnelUser";
+
+alter table "public"."tunnel_data" add column "tunnelChannelID" bigint;
+
+alter table "public"."tunnel_data" add column "tunnelModerator" text;
+
+alter table "public"."tunnel_data" add column "tunnelUsers" text[];
+
+alter table "public"."tunnel_data" alter column "tunnelGuildID" set data type bigint using "tunnelGuildID"::bigint;
+
+    """)
 
 asyncio.run(create_tables())
 

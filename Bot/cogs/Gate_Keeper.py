@@ -2,8 +2,9 @@ import random
 from typing import Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
+from .utils.converters import Converters
 from .utils.list_manipulation import insert_or_append, pop_or_remove, replace_or_set
 from .utils.message_interpreter import MessageInterpreter
 
@@ -24,6 +25,7 @@ To set a (welcome, goodbye and ban) message:
     """
     def __init__(self, bot):
         self.bot = bot
+        self.add_guild_to_db_gk.start()
 
     async def cog_check(self, ctx):
         if ctx.channel.type == discord.ChannelType.private:
@@ -36,29 +38,86 @@ To set a (welcome, goodbye and ban) message:
             return True
         return False
 
-    @commands.group(name="gate_keeper", aliases=['gk', 'announcer', 'ann'])
+    async def cog_unload(self):
+        self.add_guild_to_db_gk.cancel()
+
+    @commands.group(name="gate_keeper", aliases=['gk', 'announcer', 'ann'], invoke_without_command=True)
     async def gate_keeper(self, ctx: commands.Context):
-        check = await self.bot.pg_conn.fetchval("""
+        welcome_message_available = False
+        leave_message_available = False
+        ban_message_available = False
+        gk_data = await self.bot.pg_conn.fetch("""
         SELECT * FROM gate_keeper_data
         WHERE guild_id = $1
         """, ctx.guild.id)
-        if not check:
+        if not gk_data:
             await self.bot.pg_conn.execute("""
             INSERT INTO gate_keeper_data (guild_id)
             VALUES ($1)
             """, ctx.guild.id)
+        welcome_channel = await Converters.channel_converter(ctx.guild, gk_data[0]['welcome_message_channel_id'])
+        if welcome_channel:
+            welcome_message_available = True
+        leave_channel = await Converters.channel_converter(ctx.guild, gk_data[0]['leave_message_channel_id'])
+        if leave_channel:
+            leave_message_available = True
+        ban_channel = await Converters.channel_converter(ctx.guild, gk_data[0]['ban_message_channel_id'])
+        if ban_channel:
+            ban_message_available = True
+        embed = discord.Embed(title="Gate Keeper of this server.")
+        desc = (f"Enabled gate keepers:\n \t\t1. Welcome Message: {welcome_message_available}\n"
+                f" \t\t2. Leave Message: {leave_message_available}\n"
+                f" \t\t3. Ban Message: {ban_message_available}\n\n\n")
+        embed.add_field(name="Channels", value=(f"Welcome Channel: \t\t{welcome_channel.mention if welcome_channel else None}\n"
+                                                f"Leave Channel: \t\t{leave_channel.mention if leave_channel else None}\n"
+                                                f"Ban Channel: \t\t{ban_channel.mention if ban_channel else None}"), inline=False)
+        embed.description = desc
+        await ctx.send(embed=embed)
 
     @gate_keeper.group(name="welcome_message", aliases=['wm'], invoke_without_command=True)
     async def welcome_message(self, ctx: commands.Context):
-        pass
+        gk_data = await self.bot.pg_conn.fetch("""
+                SELECT * FROM gate_keeper_data
+                WHERE guild_id = $1
+                """, ctx.guild.id)
+        welcome_messages = [f"{index}. {MessageInterpreter(message).interpret_message(ctx.author)}" for index, message in
+                            enumerate(gk_data[0]['welcome_message'] if gk_data[0]['welcome_message'] else [], start=1)]
+        welcome_channel = await Converters.channel_converter(ctx.guild, gk_data[0]['welcome_message_channel_id'])
+        embed = discord.Embed(title="Welcome Messages")
+        desc = f"Welcome Channel: \t\t{welcome_channel.mention if welcome_channel else None}\n"
+        embed.add_field(name="Messages:", value="\n".join(welcome_messages) if welcome_messages else "None", inline=False)
+        embed.description = desc
+        await ctx.send(embed=embed)
 
     @gate_keeper.group(name="leave_message", aliases=['lm'], invoke_without_command=True)
     async def leave_message(self, ctx: commands.Context):
-        pass
+        gk_data = await self.bot.pg_conn.fetch("""
+                        SELECT * FROM gate_keeper_data
+                        WHERE guild_id = $1
+                        """, ctx.guild.id)
+        leave_messages = [f"{index}. {MessageInterpreter(message).interpret_message(ctx.author)}" for index, message in
+                          enumerate(gk_data[0]['leave_message'] if gk_data[0]['leave_message'] else [], start=1)]
+        leave_channel = await Converters.channel_converter(ctx.guild, gk_data[0]['leave_message_channel_id'])
+        embed = discord.Embed(title="Leave Messages")
+        desc = f"Leave Channel: \t\t{leave_channel.mention if leave_channel else None}\n"
+        embed.add_field(name="Messages:", value="\n".join(leave_messages) if leave_messages else "None", inline=False)
+        embed.description = desc
+        await ctx.send(embed=embed)
 
     @gate_keeper.group(name="ban_message", aliases=['bm'], invoke_without_command=True)
     async def ban_message(self, ctx: commands.Context):
-        pass
+        gk_data = await self.bot.pg_conn.fetch("""
+                                SELECT * FROM gate_keeper_data
+                                WHERE guild_id = $1
+                                """, ctx.guild.id)
+        ban_messages = [f"{index}. {MessageInterpreter(message).interpret_message(ctx.author)}" for index, message in
+                        enumerate(gk_data[0]['ban_message'] if gk_data[0]['ban_message'] else [], start=1)]
+        ban_channel = await Converters.channel_converter(ctx.guild, gk_data[0]['ban_message_channel_id'])
+        embed = discord.Embed(title="Ban Messages")
+        desc = f"Ban Channel: \t\t{ban_channel.mention if ban_channel else None}\n"
+        embed.add_field(name="Messages:", value="\n".join(ban_messages) if ban_messages else "None", inline=False)
+        embed.description = desc
+        await ctx.send(embed=embed)
 
     @welcome_message.command(name="channel", aliases=['c'])
     async def welcome_message_channel(self, ctx: commands.Context, channel: discord.TextChannel):
@@ -96,9 +155,9 @@ To set a (welcome, goodbye and ban) message:
         embed = discord.Embed()
         embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
         msg = ""
-        for index, message in enumerate(messages):
+        for index, message in enumerate(messages if messages else []):
             msg += f"{index}. {message}\n"
-        embed.description = msg
+        embed.description = msg if msg else "No messages found in this server."
         await ctx.send(embed=embed)
 
     @leave_message.group(name="message", aliases=['m'], invoke_without_command=True)
@@ -110,9 +169,9 @@ To set a (welcome, goodbye and ban) message:
         embed = discord.Embed()
         embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
         msg = ""
-        for index, message in enumerate(messages):
+        for index, message in enumerate(messages if messages else []):
             msg += f"{index}. {message}\n"
-        embed.description = msg
+        embed.description = msg if msg else "No messages found in this server."
         await ctx.send(embed=embed)
 
     @ban_message.group(name="message", aliases=['m'], invoke_without_command=True)
@@ -124,9 +183,9 @@ To set a (welcome, goodbye and ban) message:
         embed = discord.Embed()
         embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
         msg = ""
-        for index, message in enumerate(messages):
+        for index, message in enumerate(messages if messages else []):
             msg += f"{index}. {message}\n"
-        embed.description = msg
+        embed.description = msg if msg else "No messages found in this server."
         await ctx.send(embed=embed)
 
     @ban_message_message.command(name="add")
@@ -387,6 +446,19 @@ To set a (welcome, goodbye and ban) message:
         ban_message = random.choice(ban_messages)
         ban_channel = guild.get_channel(ban_channel_id)
         await ban_channel.send(str(MessageInterpreter(ban_message).interpret_message(user, guild=guild)))
+
+    @tasks.loop(seconds=10)
+    async def add_guild_to_db_gk(self):
+        for guild in self.bot.guilds:
+            gk_data = await self.bot.pg_conn.fetch("""
+                    SELECT * FROM gate_keeper_data
+                    WHERE guild_id = $1
+                    """, guild.id)
+            if not gk_data:
+                await self.bot.pg_conn.execute("""
+                        INSERT INTO gate_keeper_data (guild_id)
+                        VALUES ($1)
+                        """, guild.id)
 
 
 def setup(bot):

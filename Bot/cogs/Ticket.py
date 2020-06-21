@@ -4,7 +4,6 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import BucketType
 
-from .utils.converters import TicketConverter
 from .utils.list_manipulation import insert_or_append, pop_or_remove
 from .utils.timeformat_bot import indian_standard_time_now
 from .utils.transcriptor import message_history_into_transcript_file_object
@@ -75,13 +74,11 @@ class Ticket(commands.Cog):
                 """, ctx.guild.id)
 
     @ticket.command(help="Close a active ticket!")
-    async def close(self, ctx: commands.Context, ticket_id: Optional[TicketConverter]):
-        # ticket = await self.bot.pg_conn.fetchrow("""
-        # SELECT * FROM ticket_data
-        # WHERE "ticketID" = $1 OR "ticketChannelID" = $2
-        # """, ticket_id, ctx.channel.id)
-        print(ticket_id)
-        ticket = await TicketConverter().convert(ctx, str(ticket_id))
+    async def close(self, ctx: commands.Context, ticket_id: Optional[int]):
+        ticket = await self.bot.pg_conn.fetchrow("""
+        SELECT * FROM ticket_data
+        WHERE "ticketID" = $1 OR "ticketChannelID" = $2
+        """, ticket_id, ctx.channel.id)
         ticket_owner = ctx.guild.get_member(int(ticket['ticketAuthor'].split(' ')[-1].strip('( )')))
         if (ctx.channel.id == int(ticket['ticketChannelID'])) or (discord.utils.get(ctx.guild.roles, name="Support") in ctx.author.roles) or (ctx.author == ctx.guild.owner):
             file = await message_history_into_transcript_file_object(ctx.channel, ticket_owner, ticket['ticketID'])
