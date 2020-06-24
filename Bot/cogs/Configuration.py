@@ -13,11 +13,11 @@ class Configuration(commands.Cog):
 ```py
 To change, add, remove or get the prefix:
     1. {prefix_1}prefix add <prefix> [index] # To add a prefix, to insert one set index.
-                    (or)
+                                    (or)
     1. {prefix_1}prefix remove <prefix> [index] # To remove a prefix, to pop one set index.
-                    (or)
+                                    (or)
     1. {prefix_1}prefix set <prefix> <index> # To set a prefix, needs index to change the prefix correctly.
-                    (or)
+                                    (or)
     1. {prefix_1}prefix # This command gives the prefix of the server.
 ```
 

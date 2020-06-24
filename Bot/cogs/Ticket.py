@@ -94,7 +94,7 @@ class Ticket(commands.Cog):
             channel = discord.utils.get(ctx.guild.text_channels, id=int(ticket['ticketChannelID']))
             await channel.delete()
 
-    @ticket.command(name="add_suffix")
+    @ticket.command(name="add_suffix", help="Adds a suffix to the ticket.")
     @commands.cooldown(2, 10, BucketType.guild)
     async def ticket_add_suffix(self, ctx: commands.Context, ticket_id: Optional[int], suffix: str):
         ticket = await self.bot.pg_conn.fetchrow("""
@@ -110,7 +110,7 @@ class Ticket(commands.Cog):
         print("something")
         await ctx.send(f"Added suffix to ticket {ticket['ticketID']}")
 
-    @ticket.command(name="remove_suffix")
+    @ticket.command(name="remove_suffix", help="Removes all suffix from ticket.")
     @commands.cooldown(2, 10)
     async def ticket_remove_suffix(self, ctx: commands.Context, ticket_id: Optional[int]):
         ticket = await self.bot.pg_conn.fetchrow("""
@@ -123,7 +123,7 @@ class Ticket(commands.Cog):
         await channel.edit(name=name)
         await ctx.send(f"Removed suffix from ticket {ticket['ticketID']}")
 
-    @ticket.command(name='transcript')
+    @ticket.command(name='transcript', help="Gets transcript of the ticket.")
     async def ticket_transcript(self, ctx: commands.Context, ticket_id: Optional[int]):
         ticket = await self.bot.pg_conn.fetchrow("""
                 SELECT * FROM ticket_data
@@ -134,7 +134,7 @@ class Ticket(commands.Cog):
         file = await message_history_into_transcript_file_object(channel, ticket_owner, ticket['ticketID'])
         await ticket_owner.send(file=file)
 
-    @ticket.group(name="users", invoke_without_command=True)
+    @ticket.group(name="users", invoke_without_command=True, help="Returns all users added to ticket.")
     async def ticket_users(self, ctx: commands.Context, ticket_id: Optional[int]):
         ticket = await self.bot.pg_conn.fetchrow("""
         SELECT * FROM ticket_data
@@ -152,7 +152,7 @@ class Ticket(commands.Cog):
         embed.title = "Here are the members who was added by the staff."
         await ctx.send(embed=embed)
 
-    @ticket_users.command(name="add", aliases=['+'])
+    @ticket_users.command(name="add", aliases=['+'], help="Adds a users to the ticket.")
     async def ticket_users_add(self, ctx: commands.Context, ticket_id: Optional[int], user: Optional[discord.Member]):
         ticket = await self.bot.pg_conn.fetchrow("""
         SELECT * FROM ticket_data
@@ -176,7 +176,7 @@ class Ticket(commands.Cog):
         """, ticket_users, ticket_id, ctx.channel.id)
         await ctx.send(f"User {user.mention} was successfully added to the ticket \"{ticket_id if ticket_id is not None else ticket['ticketID']}\"")
 
-    @ticket_users.command(name="remove", aliases=['-'])
+    @ticket_users.command(name="remove", aliases=['-'], help="Removes a user from the ticket.")
     async def ticket_users_remove(self, ctx: commands.Context, ticket_id: Optional[int], user: Optional[discord.Member]):
         ticket = await self.bot.pg_conn.fetchrow("""
                SELECT * FROM ticket_data

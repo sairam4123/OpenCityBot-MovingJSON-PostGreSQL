@@ -5,13 +5,21 @@ from typing import List, Mapping, Optional, Union
 
 import discord
 import psutil
-from discord.ext import commands
+from discord.ext import commands, menus
 
 from .utils.flag_check import get_flag_and_voice_server_for_guild
 from .utils.roles_string import role_string
 from .utils.sizer import get_size
 from .utils.status_discord import get_status_of
 from .utils.timeformat_bot import convert_utc_into_ist, datetime_to_seconds, format_duration
+
+
+class MyMenuClass(menus.GroupByPageSource):
+    def __init__(self, entries, key):
+        super(MyMenuClass, self).__init__(entries, key=key, per_page=4)
+
+    def format_page(self, menu, entry):
+        pass
 
 
 class MyHelpCommand(commands.HelpCommand):
@@ -431,7 +439,7 @@ class Information(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("I can't give info for unicode symbols.")
 
-    @commands.command()
+    @commands.command(help="Gives the credits.")
     async def credits(self, ctx: commands.Context):
         await ctx.send("I have been made by these people." + "\n".join([f"{index}. {member}#{member}" for index, member in enumerate(self.bot.credits)]))
 

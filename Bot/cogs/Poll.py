@@ -28,9 +28,10 @@ class Poll(commands.Cog):
             answer_index += 1
             reply += f"{answer_index}\N{variation selector-16}\N{combining enclosing keycap} : {answer} \n"
         embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
-        embed.title = f"{ctx.author.name}#{ctx.author.discriminator} asks:"
+        embed.title = f"{ctx.author} asks:"
         embed.description = reply
         embed.colour = discord.Colour.teal()
+        embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
         message = await ctx.send(embed=embed)
         for answer_index in range(len(answers)):
             answer_index += 1

@@ -1,13 +1,15 @@
 import datetime
 import os
+# os.chdir("..")
 import random
 from itertools import cycle
 
 import asyncpg
 import discord
-from Bot.cogs.utils.timeformat_bot import format_duration
 from discord.ext import commands, tasks
 from quart import Quart
+
+from Bot.cogs.utils.timeformat_bot import format_duration
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 CLIENT_ID = os.getenv('DISCORD_CLIENT_ID')
@@ -72,16 +74,25 @@ async def on_ready():
     global BOT_IS_READY
     random_user = random.choice(bot.users)
     await bot.is_owner(random_user)
+    print(f'\n\n{bot.user} (id: {bot.user.id}) is connected to the following guilds:\n', end="")
     for guild_index, guild in enumerate(bot.guilds):
         print(
-            f'{bot.user} is connected to the following guild:\n'
-            f'{guild.name}(id: {guild.id})'
+            f' - {guild.name} (id: {guild.id})'
         )
-
-        members = '\n - '.join([member.name for member in guild.members])
+    print("\n")
+    for guild_index, guild in enumerate(bot.guilds):
+        members = '\n - '.join([f"{member} (id: {member.id})" for member in guild.members])
+        print(f'{guild.name} (id: {guild.id})')
         print(f'Guild Members of {guild.name} are:\n - {members}')
+        print(f"The above server has {guild.member_count} members")
         if guild_index != (len(bot.guilds) - 1):
             print('\n\n\n', end="")
+
+    print(f"\n\nI can view {len(bot.users)} members in {len(bot.guilds)} guilds.")
+    print()
+    print()
+    for command in bot.walk_commands():
+        print(f"{command.qualified_name} -> {command.help} -> {command.cog_name}")
     BOT_IS_READY = True
 
 
@@ -133,18 +144,11 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     elif isinstance(error, discord.Forbidden):
         await ctx.send(error.text)
 
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(f"You missing this required argument: {error.param}")
+
     else:
         raise error
-
-
-@bot.command()
-@commands.is_owner()
-async def reload_all_extensions(ctx):
-    for filename1 in os.listdir('Bot/cogs'):
-        if filename1.endswith('.py'):
-            bot.unload_extension(f'Bot.cogs.{filename1[:-3]}')
-            bot.load_extension(f'Bot.cogs.{filename1[:-3]}')
-    await ctx.send("Reloaded all extensions!")
 
 
 @tasks.loop(seconds=10)

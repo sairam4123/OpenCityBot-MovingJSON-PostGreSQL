@@ -121,7 +121,7 @@ class Tunnel(commands.Cog):
     #     await channel.edit(name=name)
     #     await ctx.send(f"Removed suffix from tunnel {tunnel['tunnelID']}")
 
-    @tunnel.command(name='transcript')
+    @tunnel.command(name='transcript', help="Returns transcript of the tunnel.")
     async def tunnel_transcript(self, ctx: commands.Context, tunnel_id: Optional[int]):
         tunnel = await self.bot.pg_conn.fetchrow("""
                     SELECT * FROM tunnel_data
@@ -132,7 +132,7 @@ class Tunnel(commands.Cog):
         file = await message_history_into_transcript_file_object(channel, tunnel_owner, tunnel['tunnelID'])
         await tunnel_owner.send(file=file)
 
-    @tunnel.group(name="users", invoke_without_command=True)
+    @tunnel.group(name="users", invoke_without_command=True, help="Returns all users added to tunnel.")
     async def tunnel_users(self, ctx: commands.Context, tunnel_id: Optional[int]):
         tunnel = await self.bot.pg_conn.fetchrow("""
             SELECT * FROM tunnel_data
@@ -150,7 +150,7 @@ class Tunnel(commands.Cog):
         embed.title = "Here are the members who was added by the staff."
         await ctx.send(embed=embed)
 
-    @tunnel_users.command(name="add", aliases=['+'])
+    @tunnel_users.command(name="add", aliases=['+'], help="Adds a user to the tunnel.")
     async def tunnel_users_add(self, ctx: commands.Context, tunnel_id: Optional[int], user: Optional[discord.Member]):
         tunnel = await self.bot.pg_conn.fetchrow("""
             SELECT * FROM tunnel_data
@@ -174,7 +174,7 @@ class Tunnel(commands.Cog):
             """, tunnel_users, tunnel_id, ctx.channel.id)
         await ctx.send(f"User {user.mention} was successfully added to the tunnel \"{tunnel_id if tunnel_id is not None else tunnel['tunnelID']}\"")
 
-    @tunnel_users.command(name="remove", aliases=['-'])
+    @tunnel_users.command(name="remove", aliases=['-'], help="Removes a user from tunnel.")
     async def tunnel_users_remove(self, ctx: commands.Context, tunnel_id: Optional[int], user: Optional[discord.Member]):
         tunnel = await self.bot.pg_conn.fetchrow("""
                    SELECT * FROM tunnel_data

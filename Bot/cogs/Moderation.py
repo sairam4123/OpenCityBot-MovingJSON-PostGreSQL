@@ -1,6 +1,8 @@
+import re
 from typing import Optional
 
 import discord
+from better_profanity import profanity
 from discord.ext import commands
 
 
@@ -20,7 +22,7 @@ class Moderation(commands.Cog):
             return True
         return False
 
-    @commands.command()
+    @commands.command(help="Adds a slowmode to a channel. If channel not passed it will be user.")
     async def slowmode(self, ctx, channel: Optional[discord.TextChannel], secs: int):
         channel = ctx.channel if not channel else channel
         await channel.edit(slowmode_delay=secs)
@@ -28,46 +30,41 @@ class Moderation(commands.Cog):
 
     @commands.command(help='Bans the given user')
     @commands.has_guild_permissions(ban_members=True)
-    async def ban(self, ctx: discord.ext.commands.context.Context, member: discord.Member, *, reason="No reason provided"):
-        role = discord.utils.get(ctx.guild.roles, name='Banned Members')
-        await member.add_roles(role, reason=reason)
-        await ctx.send(f'{member} is banned because of {reason}.')
+    async def ban(self, ctx: commands.Context, members: commands.Greedy[discord.Member], *, reason="No reason provided"):
+        pass
 
     @commands.command(help='Kicks the given user')
     @commands.has_guild_permissions(kick_members=True)
-    async def kick(self, ctx: discord.ext.commands.context.Context, member: discord.Member, *, reason="No reason provided"):
+    @commands.bot_has_guild_permissions(kick_members=True)
+    async def kick(self, ctx: commands.Context, member: discord.Member, *, reason="No reason provided"):
         role = discord.utils.get(ctx.guild.roles, name='Kicked Members')
         await member.add_roles(role, reason=reason)
         await ctx.send(f'{member} is kicked because of {reason}.')
 
     @commands.command(help="Mutes the given user")
-    @commands.has_guild_permissions(manage_roles=True)
-    async def mute(self, ctx: discord.ext.commands.context.Context, member: discord.Member, *, reason="No reason provided"):
+    @commands.has_guild_permissions(manage_roles=True, manage_guild=True)
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    async def mute(self, ctx: commands.Context, member: discord.Member, *, reason="No reason provided"):
         role = discord.utils.get(ctx.guild.roles, name='Muted Members')
         # self.bot.dispatch('member_mute', member)
         await member.add_roles(role, reason=reason)
         await ctx.send(f"{member} is muted because of {reason}.")
 
     @commands.command(help="Unmutes the given user")
-    @commands.has_guild_permissions(manage_roles=True)
-    async def unmute(self, ctx: discord.ext.commands.context.Context, member: discord.Member, *, reason="No reason provided"):
+    @commands.has_guild_permissions(manage_roles=True, manage_guild=True)
+    @commands.bot_has_guild_permissions(manage_roles=True)
+    async def unmute(self, ctx: commands.Context, member: discord.Member, *, reason="No reason provided"):
         role = discord.utils.get(ctx.guild.roles, name='Muted Members')
         await member.remove_roles(role, reason=reason)
         await ctx.send(f"{member} is unmuted because of {reason}.")
 
     @commands.command(help='Unbans the given user')
     @commands.has_guild_permissions(ban_members=True)
-    async def unban(self, ctx: discord.ext.commands.context.Context, member: discord.Member, *, reason="No reason provided"):
+    @commands.bot_has_guild_permissions(ban_members=True)
+    async def unban(self, ctx: commands.Context, member: discord.Member, *, reason="No reason provided"):
         role = discord.utils.get(ctx.guild.roles, name='Banned Members')
         await member.remove_roles(role, reason=reason)
         await ctx.send(f'{member} is unbanned because of {reason}.')
-
-    @commands.command(help='Unkicks the given user')
-    @commands.has_guild_permissions(kick_members=True)
-    async def unkick(self, ctx: discord.ext.commands.context.Context, member: discord.Member, *, reason="No reason provided"):
-        role = discord.utils.get(ctx.guild.roles, name='Kicked Members')
-        await member.remove_roles(role, reason=reason)
-        await ctx.send(f'{member} is unkicked because of {reason}.')
 
     @commands.command(help="Purges the given amount of messages", aliases=['clear'])
     @commands.has_guild_permissions(manage_messages=True)
@@ -77,6 +74,27 @@ class Moderation(commands.Cog):
     @commands.command(help="Get the status!")
     async def status(self, ctx: commands.Context, member: discord.Member):
         await ctx.send(member.activity)
+
+    @commands.Cog.listener()
+    async def on_message_create(self, message: discord.Message):
+        if not message.author.bot:
+            # profanity.add_censor_words(['idiot', 'stupid', 'fool', 'rascal'])
+            # print(discord.utils.escape_markdown(message.content))
+            _MARKDOWN_ESCAPE_SUBREGEX = '|'.join(r'\{0}(?=([\s\S]*((?<!\{0})\{0})))'.format(c)
+                                                 for c in ('*', '`', '_', '~', '|'))
+            uppercase = re.findall(r'[A-Z]', message.content)
+            print(uppercase)
+
+            _MARKDOWN_ESCAPE_REGEX = re.compile(r'(?P<markdown>%s)' % _MARKDOWN_ESCAPE_SUBREGEX)
+            regex = r'(?P<markdown>[_\\~|\*`]|>(?:>>)?\s)'
+            print(f"\"{message.content}\" in #{message.channel} by ({message.author})")
+            if profanity.contains_profanity(re.sub(regex, '', message.content)):
+                await message.delete()
+                await message.channel.send(f"{message.author.mention} No swearing, over swearing will get you muted!", delete_after=5.0)
+            elif len(uppercase) >= 23:
+                await message.delete()
+                await message.channel.send(
+                    f"{message.author.mention} Overuse of Uppercase is denied in this server, overuse of uppercase letters again and again will get you muted!", delete_after=5.0)
 
 
 def setup(bot):
