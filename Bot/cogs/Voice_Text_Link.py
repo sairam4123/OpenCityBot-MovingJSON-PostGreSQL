@@ -69,7 +69,7 @@ class Voice_Text_Link(commands.Cog):
                     if after_channel:
                         await after_channel.edit(overwrites=join_overwrites)
 
-    @commands.group(aliases=["vtl", "voice_link"], invoke_without_command=True)
+    @commands.group(aliases=["vtl", "voice_link"], invoke_without_command=True, help="Returns all Voice Text Links.")
     async def voice_text_link(self, ctx):
         voice_text_data = await self.bot.pg_conn.fetch("""
                             SELECT * FROM voice_text_data

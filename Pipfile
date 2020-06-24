@@ -18,6 +18,9 @@ wikipedia = "*"
 asyncurban = "*"
 aiowiki = {git = "https://github.com/Gelbpunkt/aiowiki"}
 dblpy = "*"
+better-profanity = "*"
+menus = {git = "https://github.com/Rapptz/discord-ext-menus"}
+parsedatetime = "*"
 
 [requires]
 python_version = "3.8"

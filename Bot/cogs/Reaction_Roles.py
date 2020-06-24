@@ -191,7 +191,7 @@ class Reaction_Roles(commands.Cog):
             elif message_type == "Limit" and limit != -1:
                 await self.limit_reaction_role(payload)
 
-    @commands.group(aliases=['reaction_roles'], help="Does nothing when invoked without subcommand!", invoke_without_command=True)
+    @commands.group(name='reaction_roles', aliases=['rr', 'react_role'], help="Does nothing when invoked without subcommand!", invoke_without_command=True)
     async def rr(self, ctx, message_id: int):
         embed = discord.Embed()
         embed.title = f"Available reaction roles for message id {message_id}!"

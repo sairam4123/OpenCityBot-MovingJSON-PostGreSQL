@@ -41,7 +41,7 @@ To set a (welcome, goodbye and ban) message:
     async def cog_unload(self):
         self.add_guild_to_db_gk.cancel()
 
-    @commands.group(name="gate_keeper", aliases=['gk', 'announcer', 'ann'], invoke_without_command=True)
+    @commands.group(name="gate_keeper", aliases=['gk', 'announcer', 'ann'], invoke_without_command=True, help="Returns the gate keeper settings.")
     async def gate_keeper(self, ctx: commands.Context):
         welcome_message_available = False
         leave_message_available = False
@@ -74,7 +74,7 @@ To set a (welcome, goodbye and ban) message:
         embed.description = desc
         await ctx.send(embed=embed)
 
-    @gate_keeper.group(name="welcome_message", aliases=['wm'], invoke_without_command=True)
+    @gate_keeper.group(name="welcome_message", aliases=['wm'], invoke_without_command=True, help="Returns the welcome message settings.")
     async def welcome_message(self, ctx: commands.Context):
         gk_data = await self.bot.pg_conn.fetch("""
                 SELECT * FROM gate_keeper_data
@@ -89,7 +89,7 @@ To set a (welcome, goodbye and ban) message:
         embed.description = desc
         await ctx.send(embed=embed)
 
-    @gate_keeper.group(name="leave_message", aliases=['lm'], invoke_without_command=True)
+    @gate_keeper.group(name="leave_message", aliases=['lm'], invoke_without_command=True, help="Returns the leave message settings.")
     async def leave_message(self, ctx: commands.Context):
         gk_data = await self.bot.pg_conn.fetch("""
                         SELECT * FROM gate_keeper_data
@@ -104,7 +104,7 @@ To set a (welcome, goodbye and ban) message:
         embed.description = desc
         await ctx.send(embed=embed)
 
-    @gate_keeper.group(name="ban_message", aliases=['bm'], invoke_without_command=True)
+    @gate_keeper.group(name="ban_message", aliases=['bm'], invoke_without_command=True, help="Returns the ban message settings.")
     async def ban_message(self, ctx: commands.Context):
         gk_data = await self.bot.pg_conn.fetch("""
                                 SELECT * FROM gate_keeper_data
@@ -119,7 +119,7 @@ To set a (welcome, goodbye and ban) message:
         embed.description = desc
         await ctx.send(embed=embed)
 
-    @welcome_message.command(name="channel", aliases=['c'])
+    @welcome_message.command(name="channel", aliases=['c'], help="Sets the welcome message channel.")
     async def welcome_message_channel(self, ctx: commands.Context, channel: discord.TextChannel):
         await self.bot.pg_conn.execute("""
                 UPDATE gate_keeper_data
@@ -128,7 +128,7 @@ To set a (welcome, goodbye and ban) message:
         """, ctx.guild.id, channel.id)
         await ctx.send(f"Set welcome message channel to {channel.mention}")
 
-    @leave_message.command(name="channel", aliases=['c'])
+    @leave_message.command(name="channel", aliases=['c'], help="Sets the leave message channel.")
     async def leave_message_channel(self, ctx: commands.Context, channel: discord.TextChannel):
         await self.bot.pg_conn.execute("""
                 UPDATE gate_keeper_data
@@ -137,7 +137,7 @@ To set a (welcome, goodbye and ban) message:
                 """, ctx.guild.id, channel.id)
         await ctx.send(f"Set leave message channel to {channel.mention}")
 
-    @ban_message.command(name="channel", aliases=['c'])
+    @ban_message.command(name="channel", aliases=['c'], help="Sets the ban message channel.")
     async def ban_message_channel(self, ctx: commands.Context, channel: discord.TextChannel):
         await self.bot.pg_conn.execute("""
                 UPDATE gate_keeper_data
@@ -146,7 +146,7 @@ To set a (welcome, goodbye and ban) message:
                 """, ctx.guild.id, channel.id)
         await ctx.send(f"Set ban message channel to {channel.mention}")
 
-    @welcome_message.group(name="message", aliases=['m'], invoke_without_command=True)
+    @welcome_message.group(name="message", aliases=['m'], invoke_without_command=True, help="Returns all the welcome messages.")
     async def welcome_message_message(self, ctx: commands.Context):
         messages = await self.bot.pg_conn.fetchval("""
         SELECT welcome_message FROM gate_keeper_data
@@ -160,7 +160,7 @@ To set a (welcome, goodbye and ban) message:
         embed.description = msg if msg else "No messages found in this server."
         await ctx.send(embed=embed)
 
-    @leave_message.group(name="message", aliases=['m'], invoke_without_command=True)
+    @leave_message.group(name="message", aliases=['m'], invoke_without_command=True, help="Returns all the leave messages.")
     async def leave_message_message(self, ctx: commands.Context):
         messages = await self.bot.pg_conn.fetchval("""
         SELECT leave_message FROM gate_keeper_data
@@ -174,7 +174,7 @@ To set a (welcome, goodbye and ban) message:
         embed.description = msg if msg else "No messages found in this server."
         await ctx.send(embed=embed)
 
-    @ban_message.group(name="message", aliases=['m'], invoke_without_command=True)
+    @ban_message.group(name="message", aliases=['m'], invoke_without_command=True, help="Returns all the ban messages.")
     async def ban_message_message(self, ctx: commands.Context):
         messages = await self.bot.pg_conn.fetchval("""
         SELECT ban_message FROM gate_keeper_data
@@ -188,7 +188,7 @@ To set a (welcome, goodbye and ban) message:
         embed.description = msg if msg else "No messages found in this server."
         await ctx.send(embed=embed)
 
-    @ban_message_message.command(name="add")
+    @ban_message_message.command(name="add", help="Adds a ban message.")
     async def ban_message_message_add(self, ctx: commands.Context, message: str, index: Optional[int] = None):
         messages = await self.bot.pg_conn.fetchval("""
                 SELECT ban_message FROM gate_keeper_data
@@ -206,7 +206,7 @@ To set a (welcome, goodbye and ban) message:
                        f"This is how it looks like when interpreted: {MessageInterpreter(message).interpret_message(ctx.author)} \n"
                        f"Here the member is you! It will be replaced with banned member name.")
 
-    @ban_message_message.command(name="remove")
+    @ban_message_message.command(name="remove", help="Removes a ban message.")
     async def ban_message_message_remove(self, ctx: commands.Context, message: str, index: Optional[int] = None):
         messages = await self.bot.pg_conn.fetchval("""
                 SELECT ban_message FROM gate_keeper_data
@@ -222,7 +222,7 @@ To set a (welcome, goodbye and ban) message:
                 """, ctx.guild.id, messages)
         await ctx.send(f"I've successfully removed your ban message which was in index {index}. ")
 
-    @ban_message_message.command(name="set")
+    @ban_message_message.command(name="set", help="Sets a ban message.")
     async def ban_message_message_set(self, ctx: commands.Context, message: str, index: int):
         messages = await self.bot.pg_conn.fetchval("""
                         SELECT ban_message FROM gate_keeper_data
@@ -241,7 +241,7 @@ To set a (welcome, goodbye and ban) message:
                        f"This is how it looks like when interpreted: {MessageInterpreter(message).interpret_message(ctx.author)} \n"
                        f"Here the member is you! It will be replaced with banned member name.")
 
-    @welcome_message_message.command(name="add")
+    @welcome_message_message.command(name="add", help="Adds a welcome message.")
     async def welcome_message_message_add(self, ctx: commands.Context, message: str, index: Optional[int] = None):
         messages = await self.bot.pg_conn.fetchval("""
                         SELECT welcome_message FROM gate_keeper_data
@@ -259,7 +259,7 @@ To set a (welcome, goodbye and ban) message:
                        f"This is how it looks like when interpreted: {MessageInterpreter(message).interpret_message(ctx.author)} \n"
                        f"Here the member is you! It will be replaced with joined member name.")
 
-    @welcome_message_message.command(name="remove")
+    @welcome_message_message.command(name="remove", help="Removes a welcome message.")
     async def welcome_message_message_remove(self, ctx: commands.Context, message: str, index: Optional[int] = None):
         messages = await self.bot.pg_conn.fetchval("""
                         SELECT welcome_message FROM gate_keeper_data
@@ -275,7 +275,7 @@ To set a (welcome, goodbye and ban) message:
                         """, ctx.guild.id, messages)
         await ctx.send(f"I've successfully removed your welcome message which was in index {index}. ")
 
-    @welcome_message_message.command(name="set")
+    @welcome_message_message.command(name="set", help="Sets a welcome message.")
     async def welcome_message_message_set(self, ctx: commands.Context, message: str, index: int = None):
         messages = await self.bot.pg_conn.fetchval("""
                                 SELECT welcome_message FROM gate_keeper_data
@@ -294,7 +294,7 @@ To set a (welcome, goodbye and ban) message:
                        f"This is how it looks like when interpreted: {MessageInterpreter(message).interpret_message(ctx.author)} \n"
                        f"Here the member is you! It will be replaced with joined member name.")
 
-    @leave_message_message.command(name="add")
+    @leave_message_message.command(name="add", help="Adds a leave message.")
     async def leave_message_message_add(self, ctx: commands.Context, message: str, index: Optional[int] = None):
         messages = await self.bot.pg_conn.fetchval("""
                         SELECT leave_message FROM gate_keeper_data
@@ -312,7 +312,7 @@ To set a (welcome, goodbye and ban) message:
                        f"This is how it looks like when interpreted: {MessageInterpreter(message).interpret_message(ctx.author)} \n"
                        f"Here the member is you! It will be replaced with left member name.")
 
-    @leave_message_message.command(name="remove")
+    @leave_message_message.command(name="remove", help="Removes a leave message.")
     async def leave_message_message_remove(self, ctx: commands.Context, message: str, index: Optional[int] = None):
         messages = await self.bot.pg_conn.fetchval("""
                                 SELECT leave_message FROM gate_keeper_data
@@ -328,7 +328,7 @@ To set a (welcome, goodbye and ban) message:
                                 """, ctx.guild.id, messages)
         await ctx.send(f"I've successfully removed your leave message which was in index {index}. ")
 
-    @leave_message_message.command(name="set")
+    @leave_message_message.command(name="set", help="Sets a leave message.")
     async def leave_message_message_set(self, ctx: commands.Context, message: str, index: int = None):
         messages = await self.bot.pg_conn.fetchval("""
                                 SELECT leave_message FROM gate_keeper_data
@@ -347,7 +347,7 @@ To set a (welcome, goodbye and ban) message:
                        f"This is how it looks like when interpreted: {MessageInterpreter(message).interpret_message(ctx.author)} \n"
                        f"Here the member is you! It will be replaced with left member name.")
 
-    @welcome_message.command(name="test_message", aliases=['t', 'tm', 'test'])
+    @welcome_message.command(name="test_message", aliases=['t', 'tm', 'test'], help="Tests a welcome message.")
     async def welcome_message_test_message(self, ctx: commands.Context, index: Optional[int] = None):
         join_messages = await self.bot.pg_conn.fetchval("""
                     SELECT welcome_message FROM gate_keeper_data
@@ -364,7 +364,7 @@ To set a (welcome, goodbye and ban) message:
                 return await ctx.send("You sent an wrong index. Please try again with correct index or try again without index.")
         await ctx.send(str(MessageInterpreter(join_message).interpret_message(ctx.author)))
 
-    @leave_message.command(name="test_message", aliases=['t', 'tm', 'test'])
+    @leave_message.command(name="test_message", aliases=['t', 'tm', 'test'], help="Tests a leave message.")
     async def leave_message_test_message(self, ctx: commands.Context, index: Optional[int] = None):
         leave_messages = await self.bot.pg_conn.fetchval("""
                     SELECT leave_message FROM gate_keeper_data
@@ -381,7 +381,7 @@ To set a (welcome, goodbye and ban) message:
                 return await ctx.send("You sent an wrong index. Please try again with correct index or try again without index.")
         await ctx.send(str(MessageInterpreter(join_message).interpret_message(ctx.author)))
 
-    @ban_message.command(name="test_message", aliases=['t', 'tm', 'test'])
+    @ban_message.command(name="test_message", aliases=['t', 'tm', 'test'], help="Tests a ban message.")
     async def ban_message_test_message(self, ctx: commands.Context, index: Optional[int] = None):
         ban_messages = await self.bot.pg_conn.fetchval("""
                     SELECT ban_message FROM gate_keeper_data

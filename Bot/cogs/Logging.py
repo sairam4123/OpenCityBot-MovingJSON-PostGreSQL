@@ -1,3 +1,5 @@
+import datetime
+
 import discord
 from discord.ext import commands
 
@@ -24,7 +26,10 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_kick(self, member):
-        print(f'{member.display_name} got kicked from {member.guild.name}')
+        async for entry in member.guild.audit_logs(action=discord.AuditLogAction.kick):
+            if (datetime.datetime.utcnow() - entry.created_at).total_seconds() < 20:
+                if entry.target == member:
+                    print(f'{member} got kicked from {member.guild.name} by {entry.user} because of {entry.reason}')
 
     @commands.Cog.listener()
     async def on_member_voice_channel_join(self, member, channel):

@@ -74,11 +74,16 @@ def color_dict_to_discord_color_list(color_dict1: Dict[str, List[str]]) -> List[
     return discord_color_list_1
 
 
-colors = {
-    "red": ["#DC143C", "#8B0000"],
-    "yellow": ["#FFFF99", "#666600"],
-    "green": ["#90EE90", "#006400"]
-}
+def rgb_tuple_to_rgb_int(r: int, g: int, b: int) -> int:
+    return r * 256 ** 2 + g * 256 + b
 
-discord_color_list_2 = color_dict_to_discord_color_list(colors)
-# print(len(discord_color_list_2[0]))
+
+if __name__ == '__main__':
+    colors = {
+        "red": ["#DC143C", "#8B0000"],
+        "yellow": ["#FFFF99", "#666600"],
+        "green": ["#90EE90", "#006400"]
+    }
+
+    discord_color_list_2 = color_dict_to_discord_color_list(colors)
+    print(len(discord_color_list_2[0]))

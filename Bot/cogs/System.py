@@ -1,3 +1,4 @@
+import os
 from typing import Union
 
 import discord
@@ -14,7 +15,7 @@ class System(commands.Cog):
     async def cog_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
 
-    @commands.command()
+    @commands.command(help='Blacklists a member from using the bot.')
     @commands.is_owner()
     async def blacklist(self, ctx: commands.Context, member_or_user: Union[discord.User, discord.Member], *, reason: str):
         black_listed_users = await self.bot.pg_conn.fetchval("""
@@ -34,7 +35,7 @@ class System(commands.Cog):
         reason = reason.strip('"')
         await ctx.send(f"I have blacklisted **{member_or_user.display_name}#{member_or_user.discriminator}** because of {reason}")
 
-    @commands.command()
+    @commands.command(help='Unblacklists a member from using the bot.')
     @commands.is_owner()
     async def unblacklist(self, ctx: commands.Context, member_or_user: Union[discord.User, discord.Member], *, reason: str):
         black_listed_users = await self.bot.pg_conn.fetchval("""
@@ -53,6 +54,18 @@ class System(commands.Cog):
             """, black_listed_users)
         reason = reason.strip('"')
         await ctx.send(f"I have unblacklisted **{member_or_user.display_name}#{member_or_user.discriminator}** because of \"{reason}\".")
+
+    @commands.command(help="Reloads all cogs.")
+    @commands.is_owner()
+    async def reload_all_extensions(self, ctx):
+        original_dir = os.getcwd()
+        os.chdir('..')
+        for filename1 in os.listdir('Bot/cogs'):
+            if filename1.endswith('.py') and not (filename1.startswith('__') or filename1.startswith('_')):
+                self.bot.unload_extension(f'Bot.cogs.{filename1[:-3]}')
+                self.bot.load_extension(f'Bot.cogs.{filename1[:-3]}')
+        await ctx.send("Reloaded all extensions!")
+        os.chdir(original_dir)
 
 
 def setup(bot):

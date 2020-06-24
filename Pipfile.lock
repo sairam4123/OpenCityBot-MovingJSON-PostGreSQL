@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "df8404caa9887d339a02bce9943d1235245edd71dd95c52d3cef4bd7ff942ec0"
+            "sha256": "6ce7ba3d88bb2b82b90892b7b99f7f7be46a5522567c2cdecb406290b260af6c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -100,6 +100,14 @@
             ],
             "version": "==4.9.1"
         },
+        "better-profanity": {
+            "hashes": [
+                "sha256:a20902b17f846aff9f9030e61ca75e2142824c2af287c078808e76a6e3292ecc",
+                "sha256:c8f1a05dfabc5e8bbe3c6f51e25cea9d1df3e2a38e433b7b88e6579d46df296b"
+            ],
+            "index": "pypi",
+            "version": "==0.6.1"
+        },
         "blinker": {
             "hashes": [
                 "sha256:471aee25f3992bd325afa3772f1063dbdbbca947a041b8b89466dc00d606f8b6"
@@ -108,10 +116,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:5ad7e9a056d25ffa5082862e36f119f7f7cec6457fa07ee2f8c339814b80c9b1",
-                "sha256:9cd41137dc19af6a5e03b630eefe7d1f458d964d406342dd3edf625839b944cc"
+                "sha256:5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3",
+                "sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41"
             ],
-            "version": "==2020.4.5.2"
+            "version": "==2020.6.20"
         },
         "chardet": {
             "hashes": [
@@ -140,7 +148,7 @@
                 "voice"
             ],
             "git": "https://github.com/Rapptz/discord.py",
-            "ref": "421d8bf8cae84b58b7242fd18f5583804de1e3e2"
+            "ref": "4078d64520562c9359b5b96a6d3e85b0b976b387"
         },
         "emoji": {
             "hashes": [
@@ -243,6 +251,10 @@
             ],
             "version": "==1.1.1"
         },
+        "menus": {
+            "git": "https://github.com/Rapptz/discord-ext-menus",
+            "ref": "d9965ecbe2dba46c2b41cc9fd14aaa556841c183"
+        },
         "multidict": {
             "hashes": [
                 "sha256:1ece5a3369835c20ed57adadc663400b5525904e53bae59ec854a5d36b39b21a",
@@ -264,6 +276,14 @@
                 "sha256:feed85993dbdb1dbc29102f50bca65bdc68f2c0c8d352468c25b54874f23c39d"
             ],
             "version": "==4.7.6"
+        },
+        "parsedatetime": {
+            "hashes": [
+                "sha256:4cb368fbb18a0b7231f4d76119165451c8d2e35951455dfee97c62a87b04d455",
+                "sha256:cb96edd7016872f58479e35879294258c71437195760746faffedb692aef000b"
+            ],
+            "index": "pypi",
+            "version": "==2.6"
         },
         "pillow": {
             "hashes": [

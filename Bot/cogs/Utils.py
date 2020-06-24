@@ -10,7 +10,7 @@ import discord
 from PIL import Image
 from discord.ext import commands
 
-from .utils.color_builder import hex_to_rgb
+from .utils.color_builder import hex_to_rgb, rgb_tuple_to_rgb_int
 
 
 class Utils(commands.Cog):
@@ -33,7 +33,7 @@ class Utils(commands.Cog):
     def random_color():
         return "#" + binascii.b2a_hex(os.urandom(3)).decode('ascii')
 
-    @commands.command()
+    @commands.command(help="Returns a random color info if color not passed else info of the given color.")
     async def color(self, ctx, color: Optional[str]):
         color_1 = ("#" + color.replace('#', '')) if color else self.random_color()
         image = Image.new("RGB", (500, 500), tuple(hex_to_rgb(color_1)))
@@ -46,13 +46,14 @@ class Utils(commands.Cog):
                                           f"HLS Value: `{colorsys.rgb_to_hls(*tuple(hex_to_rgb(color_1)))}` \n"
                                           f"HSV Value: `{colorsys.rgb_to_hsv(*tuple(hex_to_rgb(color_1)))}` \n"
                                           f"YIQ Value: `{colorsys.rgb_to_yiq(*tuple(hex_to_rgb(color_1)))}` \n"
+                                          f"RGBInt: `{rgb_tuple_to_rgb_int(*tuple(hex_to_rgb(color_1)))}`"
                               )
         embed.set_image(url=f"attachment://color.png")
         embed.set_footer(text=f"Asked by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
         embed.colour = discord.Colour.from_rgb(*tuple(hex_to_rgb(color_1)))
         await ctx.send(embed=embed, file=discord.File(_file_, "color.png"))
 
-    @commands.command()
+    @commands.command(help="Bookmarks a message. So you can read it later. ")
     async def bookmark(self, ctx, message_link: discord.Message):
         embed = discord.Embed()
         embed.title = "Bookmark"
@@ -65,7 +66,7 @@ class Utils(commands.Cog):
         embed.add_field(name="Want to view that message?", value=f"[Here it is!]({message_link.jump_url})")
         await ctx.author.send(embed=embed, file=discord.File(file, 'bookmark.png'))
 
-    @commands.command()
+    @commands.command(help="Quotes the message.")
     async def quote(self, ctx, message_link: discord.Message):
         embed = discord.Embed()
         embed.title = "Quote"
@@ -87,7 +88,7 @@ class Utils(commands.Cog):
         embed.set_image(url=member.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['pe', 'p_e', 'pin_all', 'pa', 'p_a'])
+    @commands.command(help="Pins all messages in a specific channel.", aliases=['pe', 'p_e', 'pin_all', 'pa', 'p_a'])
     async def pin_everything(self, ctx: commands.Context, channel: discord.TextChannel):
         count = 0
         async for message in channel.history():

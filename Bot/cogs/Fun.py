@@ -4,6 +4,7 @@ import re
 from itertools import cycle
 from typing import Optional
 
+import aiohttp
 import discord
 import wikipedia
 from aiowiki import Wiki
@@ -45,7 +46,7 @@ class Fun(commands.Cog):
         self.cycled_jokes = cycle(formatted_jokes)
         self.normal_jokes = formatted_jokes
 
-    @commands.command()
+    @commands.command(help="Adds a joke to the db.")
     async def joke_add(self, ctx, *, question):
         if question:
             await ctx.send("Good. Now enter the answer")
@@ -87,7 +88,7 @@ class Fun(commands.Cog):
             else:
                 yield test
 
-    @commands.command()
+    @commands.command(help="Returns a random joke.")
     async def jokes(self, ctx):
         joke = next(self.random_between_cycle_and_random())
         question = joke['question']
@@ -332,6 +333,24 @@ class Fun(commands.Cog):
 
         output_string = string.translate(translation)
         await ctx.send(output_string)
+
+    @commands.command(help="Returns a fact of a passed animal.")
+    async def fact(self, ctx: commands.Context, animal: str):
+        if animal.lower() in ('cat', 'dog', 'panda', 'fox', 'bird', 'koala'):
+            fact_url = f"https://some-random-api.ml/facts/{animal}"
+            image_url = f"https://some-random-api.ml/img/{'birb' if animal == 'bird' else animal}"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(fact_url) as request, session.get(image_url) as image_request:
+                    if request.status == 200 and image_request.status == 200:
+                        data = await request.json()
+                        image_data = await image_request.json()
+                        image = image_data['link']
+                        fact = data['fact']
+                        embed = discord.Embed(title=f"{animal.capitalize()} fact", description=fact)
+                        embed.set_image(url=image)
+                        await ctx.send(embed=embed)
+                    else:
+                        await ctx.send(f"Error code {request.status} and {image_request.status}: Error")
 
 
 def setup(bot):

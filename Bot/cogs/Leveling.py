@@ -9,6 +9,7 @@ from .utils.checks import is_guild_owner
 from .utils.color_builder import color_dict_to_discord_color_list
 from .utils.converters import bool1
 from .utils.list_manipulation import insert_or_append, pop_or_remove, replace_or_set
+from .utils.message_interpreter import MessageInterpreter
 from .utils.numbers import make_ordinal
 from .utils.permision_builder import permission_builder
 
@@ -153,7 +154,7 @@ For guild owners or people with admin permissions:
             WHERE guild_id = $1
             """, member.guild.id)
             if messages is not None:
-                level_up_message = random.choice(messages)
+                level_up_message = MessageInterpreter(random.choice(messages)).interpret_message(member, **{'level': new_level})
             else:
                 level_up_message = (f"{member.mention} "
                                     f"You've leveled up to level `{new_level}` hurray!"
@@ -453,7 +454,7 @@ For guild owners or people with admin permissions:
         embed.set_footer(text=f"Requested by {ctx.author.display_name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["set_lvlup_channel", "slumc", "lvm"])
+    @commands.command(help="Sets the level up message channel for level up messages.", aliases=["set_lvlup_channel", "slumc", "lvm"])
     async def set_level_up_message_channel(self, ctx, channel: discord.TextChannel):
         await self.bot.pg_conn.execute("""
         INSERT INTO leveling_message_destination_data
@@ -479,7 +480,7 @@ For guild owners or people with admin permissions:
                        """, ctx.guild.id)
             await ctx.send("I've disabled the level up message.")
 
-    @commands.command(aliases=['lums', 'lvl_up_message_status'])
+    @commands.command(help="Returns the level up message status.", aliases=['lums', 'lvl_up_message_status'])
     async def level_up_message_status(self, ctx):
         enabled = await self.bot.pg_conn.fetchval("""
         SELECT "enabled?" FROM leveling_message_destination_data
@@ -490,7 +491,7 @@ For guild owners or people with admin permissions:
         if not enabled:
             await ctx.send("The status of level up message is disabled.")
 
-    @commands.group(aliases=['lum', 'lvl_up_msg'])
+    @commands.group(aliases=['lum', 'lvl_up_msg'], help="Returns all level up messages of this server.")
     async def level_up_message(self, ctx: commands.Context):
         messages = await self.bot.pg_conn.fetchval("""
         SELECT level_up_messages FROM leveling_message_destination_data
@@ -500,7 +501,7 @@ For guild owners or people with admin permissions:
             await self.bot.pg_conn.execute("""
             INSERT INTO leveling_message_destination_data (guild_id)
             VALUES ($1)
-            """)
+            """, ctx.guild.id)
         embed = discord.Embed(title="Available level up messages.")
         msg = ""
         for index, message in enumerate(messages, start=1):
@@ -511,12 +512,14 @@ For guild owners or people with admin permissions:
         embed.set_footer(text=f"Requested by {ctx.author.display_name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @level_up_message.command(name="add", aliases=['+'])
+    @level_up_message.command(name="add", aliases=['+'], help="Adds a level up message to the last index if index not given else insert in the passed index.")
     async def level_up_message_add(self, ctx: commands.Context, message: str, index: Optional[int]):
         messages = await self.bot.pg_conn.fetchval("""
                 SELECT level_up_messages FROM leveling_message_destination_data
                 WHERE guild_id = $1
                 """, ctx.guild.id)
+        if not messages:
+            messages = []
         messages, message, index = insert_or_append(messages, message, index)
         await self.bot.pg_conn.execute("""
         UPDATE leveling_message_destination_data
@@ -525,12 +528,14 @@ For guild owners or people with admin permissions:
         """, ctx.guild.id, messages)
         await ctx.send(f"Added message {message}.")
 
-    @level_up_message.command(name="remove", aliases=['-'])
+    @level_up_message.command(name="remove", aliases=['-'], help="Removes a level up message from the last index if index not given else pop the passed index.")
     async def level_up_message_remove(self, ctx: commands.Context, message: str, index: Optional[int]):
         messages = await self.bot.pg_conn.fetchval("""
                         SELECT level_up_messages FROM leveling_message_destination_data
                         WHERE guild_id = $1
                         """, ctx.guild.id)
+        if not messages:
+            messages = []
         messages, message, index = pop_or_remove(messages, message, index)
         await self.bot.pg_conn.execute("""
                 UPDATE leveling_message_destination_data
@@ -539,12 +544,14 @@ For guild owners or people with admin permissions:
                 """, ctx.guild.id, messages)
         await ctx.send(f"Removed message {message}")
 
-    @level_up_message.command(name="set", aliases=['='])
+    @level_up_message.command(name="set", aliases=['='], help="Sets the level up message to the new message specified index.")
     async def level_up_message_set(self, ctx: commands.Context, message: str, index: int):
         messages = await self.bot.pg_conn.fetchval("""
                         SELECT level_up_messages FROM leveling_message_destination_data
                         WHERE guild_id = $1
                         """, ctx.guild.id)
+        if not messages:
+            messages = []
         messages, message, index = replace_or_set(messages, message, index)
         await self.bot.pg_conn.execute("""
                 UPDATE leveling_message_destination_data

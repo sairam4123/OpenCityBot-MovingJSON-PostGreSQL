@@ -89,6 +89,10 @@ async def on_ready():
             print('\n\n\n', end="")
 
     print(f"\n\nI can view {len(bot.users)} members in {len(bot.guilds)} guilds.")
+    print()
+    print()
+    for command in bot.walk_commands():
+        print(f"{command.qualified_name} -> {command.help} -> {command.cog_name}")
     BOT_IS_READY = True
 
 
@@ -145,16 +149,6 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
 
     else:
         raise error
-
-
-@bot.command()
-@commands.is_owner()
-async def reload_all_extensions(ctx):
-    for filename1 in os.listdir('Bot/cogs'):
-        if filename1.endswith('.py'):
-            bot.unload_extension(f'Bot.cogs.{filename1[:-3]}')
-            bot.load_extension(f'Bot.cogs.{filename1[:-3]}')
-    await ctx.send("Reloaded all extensions!")
 
 
 @tasks.loop(seconds=10)

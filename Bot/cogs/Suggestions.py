@@ -49,7 +49,11 @@ class Suggestions(commands.Cog):
         ).set_footer(text=f"SuggestionID: {suggestion_id} | {indian_standard_time_now()[1]}")
         embed.set_author(name=f"{ctx.author.name}", icon_url=f"{ctx.author.avatar_url}")
         message_sent = await ctx.send(embed=embed)
-        await add_emojis_to_message([":_tick:705003237174018179", ":_neutral:705003236687609936", ":_cross:705003237174018158", ":_already_there:705003236897194004"], message_sent)
+        try:
+            await add_emojis_to_message([":_tick:705003237174018179", ":_neutral:705003236687609936", ":_cross:705003237174018158", ":_already_there:705003236897194004"],
+                                        message_sent)
+        except (discord.Forbidden, discord.NotFound):
+            pass
         await self.bot.pg_conn.execute("""
         INSERT INTO suggestion_data
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
