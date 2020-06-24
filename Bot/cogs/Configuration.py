@@ -13,11 +13,11 @@ class Configuration(commands.Cog):
 ```py
 To change, add, remove or get the prefix:
     1. {prefix_1}prefix add <prefix> [index] # To add a prefix, to insert one set index.
-                                    (or)
+                    (or)
     1. {prefix_1}prefix remove <prefix> [index] # To remove a prefix, to pop one set index.
-                                    (or)
+                    (or)
     1. {prefix_1}prefix set <prefix> <index> # To set a prefix, needs index to change the prefix correctly.
-                                    (or)
+                    (or)
     1. {prefix_1}prefix # This command gives the prefix of the server.
 ```
 
@@ -66,7 +66,7 @@ To change, add, remove or get the prefix:
         WHERE guild_id = $1
         """, ctx.guild.id)
         try:
-            prefix_list, prefix_list, index = replace_or_set(prefix_list, prefix, index)
+            prefix_list, prefix, index = replace_or_set(prefix_list, prefix, index)
         except IndexError as ie:
             await ctx.send(str(ie))
         await self.bot.pg_conn.execute("""
@@ -84,7 +84,8 @@ To change, add, remove or get the prefix:
         WHERE guild_id = $1
         """, ctx.guild.id)
         try:
-            prefix_list, prefix_list, index = insert_or_append(prefix_list, prefix, index)
+            prefix_list, prefix, index = insert_or_append(prefix_list, prefix, index)
+            print(prefix_list)
         except IndexError as ie:
             await ctx.send(str(ie))
         await self.bot.pg_conn.execute("""
@@ -102,7 +103,7 @@ To change, add, remove or get the prefix:
         WHERE guild_id = $1
         """, ctx.guild.id)
         try:
-            prefix_list, prefix_list, index = pop_or_remove(prefix_list, prefix, index)
+            prefix_list, prefix, index = pop_or_remove(prefix_list, prefix, index)
         except IndexError as ie:
             await ctx.send(str(ie))
         await self.bot.pg_conn.execute("""

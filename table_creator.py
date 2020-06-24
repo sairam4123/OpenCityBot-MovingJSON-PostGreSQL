@@ -230,6 +230,14 @@ async def create_tables():
                 questions text,
                 answers text
             );
+            
+            create table if not exists "reaction_roles_message_data" 
+            (
+                "message_id" bigint,
+                "message_type" text,
+                "limit" integer default '-1'::integer
+            );
+
 
     """)
     print("created everything")

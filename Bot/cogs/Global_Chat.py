@@ -19,7 +19,7 @@ class Global_Chat(commands.Cog):
         return False
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message_create(self, message: discord.Message):
         if message.channel.type == discord.ChannelType.private:
             return
         if message.channel.name == "global_-_-_chat":
