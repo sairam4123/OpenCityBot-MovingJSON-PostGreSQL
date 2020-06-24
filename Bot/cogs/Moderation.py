@@ -77,24 +77,30 @@ class Moderation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_create(self, message: discord.Message):
-        if not message.author.bot:
-            # profanity.add_censor_words(['idiot', 'stupid', 'fool', 'rascal'])
-            # print(discord.utils.escape_markdown(message.content))
-            _MARKDOWN_ESCAPE_SUBREGEX = '|'.join(r'\{0}(?=([\s\S]*((?<!\{0})\{0})))'.format(c)
-                                                 for c in ('*', '`', '_', '~', '|'))
-            uppercase = re.findall(r'[A-Z]', message.content)
-            print(uppercase)
+        enabled = await self.bot.pg_conn.fetchval("""
+                    SELECT enabled FROM cogs_data
+                    WHERE guild_id = $1
+                    """, message.guild.id)
+        if f"Bot.cogs.{self.qualified_name}" in enabled:
+            if not message.author.bot:
+                # profanity.add_censor_words(['idiot', 'stupid', 'fool', 'rascal'])
+                # print(discord.utils.escape_markdown(message.content))
+                _MARKDOWN_ESCAPE_SUBREGEX = '|'.join(r'\{0}(?=([\s\S]*((?<!\{0})\{0})))'.format(c)
+                                                     for c in ('*', '`', '_', '~', '|'))
+                uppercase = re.findall(r'[A-Z]', message.content)
+                print(uppercase)
 
-            _MARKDOWN_ESCAPE_REGEX = re.compile(r'(?P<markdown>%s)' % _MARKDOWN_ESCAPE_SUBREGEX)
-            regex = r'(?P<markdown>[_\\~|\*`]|>(?:>>)?\s)'
-            print(f"\"{message.content}\" in #{message.channel} by ({message.author})")
-            if profanity.contains_profanity(re.sub(regex, '', message.content)):
-                await message.delete()
-                await message.channel.send(f"{message.author.mention} No swearing, over swearing will get you muted!", delete_after=5.0)
-            elif len(uppercase) >= 23:
-                await message.delete()
-                await message.channel.send(
-                    f"{message.author.mention} Overuse of Uppercase is denied in this server, overuse of uppercase letters again and again will get you muted!", delete_after=5.0)
+                _MARKDOWN_ESCAPE_REGEX = re.compile(r'(?P<markdown>%s)' % _MARKDOWN_ESCAPE_SUBREGEX)
+                regex = r'(?P<markdown>[_\\~|\*`]|>(?:>>)?\s)'
+                print(f"\"{message.content}\" in #{message.channel} by ({message.author})")
+                if profanity.contains_profanity(re.sub(regex, '', message.content)):
+                    await message.delete()
+                    await message.channel.send(f"{message.author.mention} No swearing, over swearing will get you muted!", delete_after=5.0)
+                elif len(uppercase) >= 23:
+                    await message.delete()
+                    await message.channel.send(
+                        f"{message.author.mention} Overuse of Uppercase is denied in this server, overuse of uppercase letters again and again will get you muted!",
+                        delete_after=5.0)
 
 
 def setup(bot):
