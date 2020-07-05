@@ -162,8 +162,6 @@ For guild owners or people with admin permissions:
             level_up_message_destination = await self.get_destination_for_level_up_messages(message)
             if level_up_message_destination is not None:
                 await level_up_message_destination.send(level_up_message)
-            else:
-                await message.channel.send(level_up_message)
 
     async def update_xps(self, member: discord.Member, message: discord.Message):
         if (int(time.time()) - int(await self.get_last_message_time(member))) > 30 and not str(message.content).startswith(tuple(await self.bot.get_prefix(message))):
