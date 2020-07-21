@@ -44,9 +44,11 @@ class Ticket(commands.Cog):
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
             ctx.author: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True),
-            support_role: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True)
+            support_role: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True),
+            ctx.me: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True)
+
         }
-        author = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        author = f"{ctx.author} ({ctx.author.id})"
         embed = discord.Embed(
             title=f"Thank you for creating a ticket! {ctx.author.name} This is Ticket #{ticket_number}",
             description=f"Thank you for creating a ticket! {ctx.author.mention}\nWe'll get back to you as soon as possible.",
@@ -83,7 +85,7 @@ class Ticket(commands.Cog):
         if (ctx.channel.id == int(ticket['ticketChannelID'])) or (discord.utils.get(ctx.guild.roles, name="Support") in ctx.author.roles) or (ctx.author == ctx.guild.owner):
             file = await message_history_into_transcript_file_object(ctx.channel, ticket_owner, ticket['ticketID'])
             await ticket_owner.send(file=file)
-            moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+            moderator = f"{ctx.author} ({ctx.author.id})"
             await self.bot.pg_conn.execute("""
             UPDATE ticket_data
             SET "ticketClosedTime" = $2,
@@ -159,7 +161,7 @@ class Ticket(commands.Cog):
         WHERE "ticketID" = $1 OR "ticketChannelID" = $2
         """, ticket_id, ctx.channel.id)
         ticket_users = ticket['ticketUsers']
-        user_1 = f"{user.name}#{user.discriminator} ({user.id})"
+        user_1 = f"{user} ({user.id})"
         ticket_users, user_1, index = insert_or_append(ticket_users, user_1)
         if ticket_users:
             ticket_users.remove("No user was added till now.")
@@ -183,7 +185,7 @@ class Ticket(commands.Cog):
                WHERE "ticketID" = $1 OR "ticketChannelID" = $2
                """, ticket_id, ctx.channel.id)
         ticket_users = ticket['ticketUsers']
-        user_1 = f"{user.name}#{user.discriminator} ({user.id})"
+        user_1 = f"{user} ({user.id})"
         ticket_users, user_1, index = pop_or_remove(ticket_users, user_1)
         if not ticket_users:
             ticket_users.append("No user was added till now.")
