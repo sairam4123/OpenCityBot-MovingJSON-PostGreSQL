@@ -3,7 +3,7 @@ import time
 from typing import Optional
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
 
 from .utils.checks import is_guild_owner
 from .utils.color_builder import color_dict_to_discord_color_list
@@ -12,6 +12,48 @@ from .utils.list_manipulation import insert_or_append, pop_or_remove, replace_or
 from .utils.message_interpreter import MessageInterpreter
 from .utils.numbers import make_ordinal
 from .utils.permision_builder import permission_builder
+
+
+class Leveling_Menu(menus.MenuPages):
+    async def update(self, payload):
+        if self._can_remove_reactions:
+            if payload.event_type == 'REACTION_ADD':
+                await self.bot.http.remove_reaction(
+                    payload.channel_id, payload.message_id,
+                    discord.Message._emoji_reaction(payload.emoji), payload.member.id
+                )
+            elif payload.event_type == 'REACTION_REMOVE':
+                return
+        await super().update(payload)
+
+
+class LevelingMenuPages(menus.ListPageSource):
+
+    async def write_page(self, menu, offset, fields=None):
+        if fields is None:
+            fields = []
+        len_data = len(self.entries)
+
+        embed = discord.Embed(title=f"Leaderboard for {menu.ctx.guild.name}",
+                              colour=menu.ctx.author.colour)
+        embed.set_thumbnail(url=menu.ctx.guild.icon_url)
+        embed.set_footer(text=f"Requested by {menu.ctx.author}. {offset:,} - {min(len_data, offset + self.per_page - 1):,} of {len_data:,} members.")
+
+        for name, value in fields:
+            embed.add_field(name=name, value=value, inline=False)
+
+        return embed
+
+    async def format_page(self, menu, entries):
+        offset = (menu.current_page * self.per_page) + 1
+
+        fields = []
+        table = ("\n".join(f"{idx + offset}. {member.mention} is in {make_ordinal(entry['level'])} level with {entry['xps']}xps"
+                           for idx, entry in enumerate(entries) if (member := menu.ctx.bot.get_guild(menu.ctx.guild.id).get_member(entry['user_id']))))
+
+        fields.append(("Ranks", table))
+
+        return await self.write_page(menu, offset, fields)
 
 
 class Leveling(commands.Cog):
@@ -435,22 +477,17 @@ For guild owners or people with admin permissions:
     @commands.command(name="leaderboard", aliases=['lb'], help="Returns leaderboard.")
     async def leader_board(self, ctx):
         leaderboard = await self.get_leader_board(ctx.guild.id)
-        msg = ''
+        new_entries = []
         index = 1
-        for user_id, level, xps in leaderboard:
-            user = discord.utils.get(ctx.guild.members, id=int(user_id))
-            if user is not None:
-                if not user.bot:
-                    msg += f"{index}. {user.mention} is in {make_ordinal(level)} level with {xps}xps\n"
-                    index += 1
+        for entry in leaderboard:
+            if ctx.bot.get_guild(ctx.guild.id).get_member(entry['user_id']):
+                new_entries.append(entry)
+                index += 1
             else:
-                print(f'user not found in index {index - 1}')
-        embed = discord.Embed()
-        embed.title = f"Leaderboard for {ctx.guild.name}"
-        embed.description = msg
-        embed.set_author(name=ctx.me.name, icon_url=ctx.me.avatar_url)
-        embed.set_footer(text=f"Requested by {ctx.author.display_name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
+                print(f"user not found in index {index}")
+        source = LevelingMenuPages(new_entries, per_page=5)
+        pages = Leveling_Menu(source=source)
+        await pages.start(ctx)
 
     @commands.command(help="Sets the level up message channel for level up messages.", aliases=["set_lvlup_channel", "slumc", "lvm"])
     async def set_level_up_message_channel(self, ctx, channel: discord.TextChannel):
@@ -507,7 +544,7 @@ For guild owners or people with admin permissions:
 
         embed.description = msg
         embed.set_author(name=self.bot.user.display_name, icon_url=self.bot.user.avatar_url)
-        embed.set_footer(text=f"Requested by {ctx.author.display_name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @level_up_message.command(name="add", aliases=['+'], help="Adds a level up message to the last index if index not given else insert in the passed index.")
