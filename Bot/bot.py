@@ -21,6 +21,7 @@ DELIMITER = os.getenv('DEFAULT_DELIMITER_FOR_ENV')
 IP_ADDRESS = os.getenv('IP_ADDRESS')
 PORT_NUMBER = os.getenv('PORT_NUMBER')
 DATABASE_URL = os.getenv('DATABASE_URL')
+SSL_REQUIRED = bool(int(os.getenv('SSL_REQUIRED', False)))
 
 
 async def get_prefix(bot_1, message):
@@ -67,7 +68,10 @@ STATUSES = cycle([discord.Status.online, discord.Status.idle, discord.Status.do_
 
 
 async def connection_for_pg():
-    bot.pg_conn = await asyncpg.create_pool(DATABASE_URL)
+    if SSL_REQUIRED:
+        bot.pg_conn = await asyncpg.create_pool(DATABASE_URL, ssl='require')
+    else:
+        bot.pg_conn = await asyncpg.create_pool(DATABASE_URL)
 
 
 @bot.event
