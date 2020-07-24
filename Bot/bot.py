@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import os
 # os.chdir("..")
@@ -74,6 +75,7 @@ async def on_ready():
     global BOT_IS_READY
     random_user = random.choice(bot.users)
     await bot.is_owner(random_user)
+    await asyncio.sleep(5)
     print(f'\n\n{bot.user} (id: {bot.user.id}) is connected to the following guilds:\n', end="")
     for guild_index, guild in enumerate(bot.guilds):
         print(
@@ -238,6 +240,7 @@ bot.loop.create_task(app.run_task(host=IP_ADDRESS, port=int(PORT_NUMBER)))
 my_presence_per_day.start()
 add_guild_to_db.start()
 update_count_data_according_to_guild.start()
+bot.loop.run_until_complete(connection_for_pg())
 
 bot.run(TOKEN)
 
