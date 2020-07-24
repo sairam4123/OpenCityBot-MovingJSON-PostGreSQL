@@ -123,7 +123,8 @@ async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     error = getattr(error, "original", error)
 
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send("I am not able to find the command, you asked me, in my registered commands list.")
+        if ctx.guild.id != 264445053596991498:
+            await ctx.send("I am not able to find the command, you asked me, in my registered commands list.")
 
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send("Sorry, I think you need to ask your server owner or people with role higher than you to give the needed permission.\n"
