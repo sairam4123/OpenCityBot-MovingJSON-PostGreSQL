@@ -7,6 +7,8 @@ from itertools import cycle
 
 import asyncpg
 import discord
+
+print(f"{discord.__version__=}")
 from discord.ext import commands, tasks
 from quart import Quart
 
