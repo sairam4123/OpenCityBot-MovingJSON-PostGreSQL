@@ -17,7 +17,7 @@ If you use PyCharm:
   1. Open the folder as Project.  
   2. Create a env file. 
   3. Go to terminal
-  4. Run this code `pipenv install` (I assume that you have installed pipenv)
+  4. Run this code `pipenv install` (I assume that you have installed pipenv else `pip install pipenv`)
   5. Run this code `python table_creator`
   6. Run the `start.sh`
 
