@@ -6,7 +6,8 @@ I am currently moving the json files as the JSON takes space.
 
 So, it is better for me to use PostgreSQL for my bot.  
 
-* If you want to contribute for this repository, you can contribute any feature you like, but it should follow the pep-8.  
+* If you want to contribute for this repository, you can contribute any feature you like,   
+but it should follow the **pep-8.**  
 
 
 Here's how you need to run the bot file. I recommend using PyCharm.  
