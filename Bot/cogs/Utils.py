@@ -4,13 +4,14 @@ import colorsys
 import io
 import os
 import pathlib
+import re
 from typing import Optional, Union
 
 import discord
 from PIL import Image
 from discord.ext import commands
 
-from .utils.color_builder import hex_to_rgb, rgb_tuple_to_rgb_int
+from .utils.color_builder import rgb_tuple_to_rgb_int
 
 
 class Utils(commands.Cog):
@@ -33,24 +34,46 @@ class Utils(commands.Cog):
     def random_color():
         return "#" + binascii.b2a_hex(os.urandom(3)).decode('ascii')
 
-    @commands.command(help="Returns a random color info if color not passed else info of the given color.")
-    async def color(self, ctx, color: Optional[str]):
-        color_1 = ("#" + color.replace('#', '')) if color else self.random_color()
-        image = Image.new("RGB", (500, 500), tuple(hex_to_rgb(color_1)))
+    @commands.command(aliases=['color'], help="Returns a random color info if color not passed else info of the given color.")
+    async def colour(self, ctx, color: Optional[str]):
+        from colour import Color
+        if re.match('([A-Fa-f0-9]{1,6})', color):
+            color = ("#" + color.replace('#', ''))
+        color_2 = color
+        # print(3 <= len(color) <= 6 and color.startswith('#'))
+        if 3 <= len(color) <= 6 and color.startswith('#'):
+            for zero in range(len(color), 8):
+                color += color_2[-1]
+                if len(color) == 7:
+                    break
+        del color_2
+        color_2 = color
+        # print(1 <= len(color) <= 2 and color.startswith('#'))
+        if 0 <= len(color) <= 3 and color.startswith('#'):
+            for zero in range(len(color), 5):
+                color += color_2[-1]
+                if len(color) == 4:
+                    break
+        del color_2
+        try:
+            color_1 = Color(color)
+        except ValueError as exc:
+            return await ctx.send(exc)
+        image = Image.new("RGB", (500, 500), tuple(map(int, map(lambda r: r*255, color_1.get_rgb()))))
         _file_ = io.BytesIO()
         image.save(_file_, "PNG")
         _file_.seek(0)
-        embed = discord.Embed(title="Request for color approved!",
-                              description=f"Hex code: `{color_1.upper()}` \n RGB value: `{tuple(hex_to_rgb(color_1))}` \n "
-                                          f"Link: [color](https://www.color-hex.com/color/{color_1.lstrip('#')}) \n"
-                                          f"HLS Value: `{colorsys.rgb_to_hls(*tuple(hex_to_rgb(color_1)))}` \n"
-                                          f"HSV Value: `{colorsys.rgb_to_hsv(*tuple(hex_to_rgb(color_1)))}` \n"
-                                          f"YIQ Value: `{colorsys.rgb_to_yiq(*tuple(hex_to_rgb(color_1)))}` \n"
-                                          f"RGBInt: `{rgb_tuple_to_rgb_int(*tuple(hex_to_rgb(color_1)))}`"
+        embed = discord.Embed(title="Here's your requested color!",
+                              description=f"Hex code: `{color_1.get_hex_l()}` \n RGB value: `{tuple(map(int, map(lambda r: r*255, color_1.get_rgb())))}` \n "
+                                          f"Link: [color](https://www.color-hex.com/color/{color_1.get_hex().lstrip('#')}) \n"
+                                          f"HLS Value: `{colorsys.rgb_to_hls(*tuple(map(int, map(lambda r: r*255, color_1.get_rgb()))))}` \n"
+                                          f"HSV Value: `{colorsys.rgb_to_hsv(*tuple(map(int, map(lambda r: r*255, color_1.get_rgb()))))}` \n"
+                                          f"YIQ Value: `{colorsys.rgb_to_yiq(*tuple(map(int, map(lambda r: r*255, color_1.get_rgb()))))}` \n"
+                                          f"RGBInt: `{rgb_tuple_to_rgb_int(*tuple(map(int, map(lambda r: r*255, color_1.get_rgb()))))}`"
                               )
         embed.set_image(url=f"attachment://color.png")
-        embed.set_footer(text=f"Asked by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-        embed.colour = discord.Colour.from_rgb(*tuple(hex_to_rgb(color_1)))
+        embed.set_footer(text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
+        embed.colour = discord.Colour.from_rgb(*tuple(map(int, map(lambda r: r*255, color_1.get_rgb()))))
         await ctx.send(embed=embed, file=discord.File(_file_, "color.png"))
 
     @commands.command(help="Bookmarks a message. So you can read it later. ")
@@ -78,7 +101,7 @@ class Utils(commands.Cog):
     @commands.command(help="Gives the avatar.", name="avatar", aliases=['av'])
     async def avatar(self, ctx, member: Optional[Union[discord.Member, discord.User]]):
         member = ctx.author if not member else member
-        embed = discord.Embed(title=f"Avatar for {member.name}#{member.discriminator}")
+        embed = discord.Embed(title=f"Avatar for {member}")
         png = f"[png]({member.avatar_url_as(format='png')})"
         jpg = f"[jpg]({member.avatar_url_as(format='jpg')})"
         webp = f"[webp]({member.avatar_url_as(format='webp')})"

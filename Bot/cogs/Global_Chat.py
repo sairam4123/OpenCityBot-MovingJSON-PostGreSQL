@@ -33,7 +33,7 @@ class Global_Chat(commands.Cog):
                     if channel.name == "global_-_chat":
                         embed = discord.Embed(
                             color=message_1.author.color,
-                            title=f"Sender: {message_1.author.display_name}#{message_1.author.discriminator}",
+                            title=f"Sender: {message_1.author}",
                             description=message_1.content
                         ).set_footer(text=f"From: {message_1.guild.name} | Author ID: {message_1.author.id}").set_thumbnail(url=message_1.author.avatar_url) \
                             .set_author(name=message_1.author.display_name, icon_url=message_1.author.avatar_url)

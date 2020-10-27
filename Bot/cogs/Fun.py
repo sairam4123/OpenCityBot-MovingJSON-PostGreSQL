@@ -101,6 +101,7 @@ class Fun(commands.Cog):
 
     @tasks.loop(seconds=5)
     async def jokes_update(self):
+        await self.bot.wait_until_ready()
         jokes_data = await self.bot.pg_conn.fetch("""
                 SELECT questions, answers FROM jokes_data
                 """)

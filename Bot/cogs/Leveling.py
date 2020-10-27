@@ -1,3 +1,4 @@
+import asyncio
 import random
 import time
 from typing import Optional
@@ -162,8 +163,6 @@ For guild owners or people with admin permissions:
             level_up_message_destination = await self.get_destination_for_level_up_messages(message)
             if level_up_message_destination is not None:
                 await level_up_message_destination.send(level_up_message)
-            else:
-                await message.channel.send(level_up_message)
 
     async def update_xps(self, member: discord.Member, message: discord.Message):
         if (int(time.time()) - int(await self.get_last_message_time(member))) > 30 and not str(message.content).startswith(tuple(await self.bot.get_prefix(message))):
@@ -332,25 +331,25 @@ For guild owners or people with admin permissions:
             await ctx.send(f"{ctx.author.mention} Good going! You current experience is: `{user_xps}`")
 
     @xps.command(name="view", help="View other persons xps", aliases=['get'])
-    async def xps_view(self, ctx, member: Optional[discord.Member] = None):
-        if member is None:
+    async def xps_view(self, ctx, members: commands.Greedy[discord.Member]):
+        if members is None:
             await ctx.send(f'{ctx.author.mention} Please mention someone!')
 
         else:
-            if len(ctx.message.mentions) > 0:
+            if len(members) > 0:
                 msg = ''
-                for user in ctx.message.mentions:
-                    if not user.bot:
-                        if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in user.roles:
+                for member in members:
+                    if not member.bot:
+                        if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in member.roles:
 
-                            msg += f"{user.mention} is a respected person or have finished leveling.\n"
+                            msg += f"{member.mention} is a blacklisted person or have finished leveling.\n"
 
                         else:
-                            await self.update_data(user)
-                            user_xps = await self.get_xps(user)
-                            msg += f"{user.mention} has {user_xps}xps.\n"
+                            await self.update_data(member)
+                            user_xps = await self.get_xps(member)
+                            msg += f"{member.mention} has {user_xps}xps.\n"
                     else:
-                        msg += f"{user.mention} is a Bot.\n"
+                        msg += f"{member.mention} is a Bot.\n"
                 await ctx.send(msg)
 
     @xps.command(name="set", help="Sets xps for a user", aliases=['='])
@@ -385,22 +384,22 @@ For guild owners or people with admin permissions:
             await ctx.send(f"{ctx.author.mention} You are level `{user_level}` now. Keep participating in the server to climb up in the leaderboard.")
 
     @level.command(name="view", help="View other persons levels", aliases=['get'])
-    async def level_view(self, ctx, member: Optional[discord.Member] = None):
-        if member is None:
+    async def level_view(self, ctx, members: commands.Greedy[discord.Member] = None):
+        if members is None:
             await ctx.send(f'{ctx.author.mention} Please mention someone!')
         else:
-            if len(ctx.message.mentions) > 0:
+            if members:
                 msg = ''
-                for user in ctx.message.mentions:
-                    if not user.bot:
-                        if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in user.roles:
-                            msg += f"{user.mention} is a respected people or have finished leveling.\n"
+                for member in members:
+                    if not member.bot:
+                        if discord.utils.find(lambda r: r.name == 'Respected People', ctx.guild.roles) in member.roles:
+                            msg += f"{member.mention} is a blacklisted person or have finished leveling.\n"
                         else:
-                            await self.update_data(user)
-                            user_level = await self.get_level(user)
-                            msg += f"{user.mention} is in {make_ordinal(user_level)} level.\n"
+                            await self.update_data(member)
+                            user_level = await self.get_level(member)
+                            msg += f"{member.mention} is in {make_ordinal(user_level)} level.\n"
                     else:
-                        msg += f"{user.mention} is a Bot.\n"
+                        msg += f"{member.mention} is a Bot.\n"
                 await ctx.send(msg)
 
     @level.command(name="set", help="Sets level for a user!", aliases=['='])
@@ -451,7 +450,7 @@ For guild owners or people with admin permissions:
         embed.title = f"Leaderboard for {ctx.guild.name}"
         embed.description = msg
         embed.set_author(name=ctx.me.name, icon_url=ctx.me.avatar_url)
-        embed.set_footer(text=f"Requested by {ctx.author.display_name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command(help="Sets the level up message channel for level up messages.", aliases=["set_lvlup_channel", "slumc", "lvm"])
@@ -509,7 +508,7 @@ For guild owners or people with admin permissions:
 
         embed.description = msg
         embed.set_author(name=self.bot.user.display_name, icon_url=self.bot.user.avatar_url)
-        embed.set_footer(text=f"Requested by {ctx.author.display_name}#{ctx.author.discriminator}", icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
     @level_up_message.command(name="add", aliases=['+'], help="Adds a level up message to the last index if index not given else insert in the passed index.")
@@ -559,6 +558,13 @@ For guild owners or people with admin permissions:
                 WHERE guild_id = $1
                 """, ctx.guild.id, messages)
         await ctx.send(f"Set message {message} to {index}")
+
+    @commands.command()
+    async def add_all_leveling_role_to(self, ctx, leveling_role_type: str, member: discord.Member):
+        for i in self.leveling_prefix:
+            await member.add_roles(discord.utils.get(member.guild.roles, name=i+leveling_role_type))
+            await asyncio.sleep(2)
+        await ctx.send(f"Added all leveling roles to {member.mention}")
 
 
 def setup(bot):

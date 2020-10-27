@@ -180,17 +180,6 @@ class Information(commands.Cog):
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
 
-    async def cog_check(self, ctx):
-        if ctx.channel.type == discord.ChannelType.private:
-            return True
-        enabled = await self.bot.pg_conn.fetchval("""
-            SELECT enabled FROM cogs_data
-            WHERE guild_id = $1
-            """, ctx.guild.id)
-        if f"Bot.cogs.{self.qualified_name}" in enabled:
-            return True
-        return False
-
     @commands.command(help='Pings the bot and gives latency')
     @commands.cooldown(2, 10)
     async def ping(self, ctx: discord.ext.commands.context.Context):
@@ -238,8 +227,8 @@ class Information(commands.Cog):
         embed.title = f"Info of {member.display_name}"
         embed.add_field(name="Name", value=member.display_name)
         embed.add_field(name="ID", value=member.id)
-        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(member.created_at)[1]} \n {format_duration(datetime_to_seconds(member.created_at))} ago", inline=False)
-        embed.add_field(name="Joined at", value=f"{convert_utc_into_ist(member.joined_at)[1]} \n {format_duration(datetime_to_seconds(member.joined_at))} ago")
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(member.created_at)[1]} \n {format_duration(datetime_to_seconds(convert_utc_into_ist(member.created_at)[0]))} ago", inline=False)
+        embed.add_field(name="Joined at", value=f"{convert_utc_into_ist(member.joined_at)[1]} \n {format_duration(datetime_to_seconds(convert_utc_into_ist(member.joined_at)[0]))} ago")
         embed.add_field(name="Roles", value=role_string(list(reversed(member.roles[1:]))) if role_string(list(reversed(member.roles[1:]))) else "This man has no roles",
                         inline=False)
         embed.add_field(name="Avatar URL", value=f"[Avatar URL]({member.avatar_url})")
@@ -256,11 +245,11 @@ class Information(commands.Cog):
         bot_owners = ""
         if appinfo.team is None:
             bot_owner = await self.bot.fetch_user(self.bot.owner_id)
-            bot_owners = "`" + bot_owner.display_name + "#" + bot_owner.discriminator + "`"
+            bot_owners = f"`{bot_owner}`"
         else:
             for bot_owner_id in self.bot.owner_ids:
                 bot_owner = await self.bot.fetch_user(bot_owner_id)
-                bot_owners += " `" + bot_owner.display_name + "#" + bot_owner.discriminator + "`"
+                bot_owners += f" `{bot_owner}`"
 
         embed = discord.Embed()
         embed.set_author(name=ctx.me.display_name, icon_url=ctx.me.avatar_url)
@@ -273,7 +262,7 @@ class Information(commands.Cog):
         embed.add_field(name="Channels count", value=f"{len([channel for channel in self.bot.get_all_channels()])}")
         embed.add_field(name="Bot Owner(s)", value=bot_owners, inline=False)
         embed.add_field(name="CPU Usage", value=f"`{psutil.cpu_percent()}%`")
-        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(self.bot.user.created_at)[1]} \n {format_duration(datetime_to_seconds(self.bot.user.created_at))} ago")
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(self.bot.user.created_at)[1]} \n {format_duration(datetime_to_seconds(convert_utc_into_ist(self.bot.user.created_at)[0]))} ago")
         embed.add_field(name="Memory or RAM Usage", value=f"`{psutil.virtual_memory().percent}%`")
         embed.add_field(name="Network Sent", value=f"`{get_size(psutil.net_io_counters().bytes_sent)}`")
         embed.add_field(name="Network Received", value=f"`{get_size(psutil.net_io_counters().bytes_recv)}`")
@@ -329,9 +318,9 @@ class Information(commands.Cog):
         embed.title = f"Info of {guild.name}"
         embed.add_field(name="Name", value=guild.name)
         embed.add_field(name="ID", value=guild.id)
-        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(guild.created_at)[1]} \n {format_duration(datetime_to_seconds(guild.created_at))} ago", inline=False)
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(guild.created_at)[1]} \n {format_duration(datetime_to_seconds(convert_utc_into_ist(guild.created_at)[0]))} ago", inline=False)
         embed.add_field(name="Channels available",
-                        value=f"<:channel:713041608379203687> {len(guild.text_channels)} \t <:voice:713041608312094731> {len(guild.voice_channels)}\n <:news:713041608559427624> "
+                        value=f"<:channel:713041608379203687> {len([channel for channel in guild.text_channels if not (channel.is_news() or channel.is_nsfw())])} \t <:voice:713041608312094731> {len(guild.voice_channels)}\n <:news:713041608559427624> "
                               f"{news_channels} \t <:store_tag1:716660817487200338> {store_channels} \n "
                               f"<:nsfw:716664108392644708> {nsfw_channels} \t <:category1:714347844307517514> "
                               f"{category_channels} \n \n Total: {len(guild.channels)}")
@@ -375,7 +364,7 @@ class Information(commands.Cog):
         embed.title = f"Info of {role.name}"
         embed.add_field(name="Name", value=role.name)
         embed.add_field(name="ID", value=role.id)
-        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(role.created_at)[1]} \n {format_duration(datetime_to_seconds(role.created_at))} ago", inline=False)
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(role.created_at)[1]} \n {format_duration(datetime_to_seconds(convert_utc_into_ist(role.created_at)[0]))} ago", inline=False)
         embed.add_field(name="Hoisted",
                         value=role.hoist)
         embed.add_field(name="Mentionable",
@@ -396,10 +385,10 @@ class Information(commands.Cog):
 
         type_1 = ("None"
                   if channel is None else "<:channel:713041608379203687> Text"
-        if channel.type == discord.ChannelType.text else "<:voice:713041608312094731> Voice"
-        if channel.type == discord.ChannelType.voice else "<:news:713041608559427624> News"
-        if channel.type == discord.ChannelType.news else "<:store_tag1:716660817487200338> Store"
-        if channel.type == discord.ChannelType.store else "<:category1:714347844307517514> Category"
+                  if channel.type == discord.ChannelType.text else "<:voice:713041608312094731> Voice"
+                  if channel.type == discord.ChannelType.voice else "<:news:713041608559427624> News"
+                  if channel.type == discord.ChannelType.news else "<:store_tag1:716660817487200338> Store"
+                  if channel.type == discord.ChannelType.store else "<:category1:714347844307517514> Category"
                   )
         embed = discord.Embed()
         embed.set_author(name=ctx.guild.name, icon_url=ctx.guild.icon_url)
@@ -407,7 +396,7 @@ class Information(commands.Cog):
         embed.title = f"Info of {channel.name}"
         embed.add_field(name="Name", value=channel.name)
         embed.add_field(name="ID", value=channel.id)
-        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(channel.created_at)[1]} \n {format_duration(datetime_to_seconds(channel.created_at))} ago", inline=False)
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(channel.created_at)[1]} \n {format_duration(datetime_to_seconds(convert_utc_into_ist(channel.created_at)[0]))} ago", inline=False)
         if channel.type == discord.ChannelType.text:
             embed.add_field(name="NSFW", value=channel.nsfw)
         embed.add_field(name="Type",
@@ -427,7 +416,7 @@ class Information(commands.Cog):
         embed = discord.Embed(title=f"Info of {emoji}")
         embed.add_field(name="Emoji name", value=f"{emoji.name}")
         embed.add_field(name="ID", value=f"{emoji.id}")
-        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(emoji.created_at)[1]} \n {format_duration(datetime_to_seconds(emoji.created_at))} ago")
+        embed.add_field(name="Created at", value=f"{convert_utc_into_ist(emoji.created_at)[1]} \n {format_duration(datetime_to_seconds(convert_utc_into_ist(emoji.created_at)[0]))} ago")
         embed.add_field(name="Is animated?", value=emoji.animated)
         embed.add_field(name="Is managed?", value=emoji.managed)
         embed.add_field(name="URL", value=f"{f'[URL]({emoji.url})' if emoji.url else 'None'}")

@@ -50,9 +50,9 @@ class Reports(commands.Cog):
         await self.bot.pg_conn.execute("""
             INSERT INTO report_data
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            """, report_id, message_sent.id, title, reason, f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})", indian_standard_time_now()[1],
+            """, report_id, message_sent.id, title, reason, f"{ctx.author} ({ctx.author.id})", indian_standard_time_now()[1],
                                        message_sent.channel.id, message_sent.guild.id, "waiting",
-                                       f"{reported_user.name}#{reported_user.discriminator} ({reported_user.id})", "Null")
+                                       f"{reported_user} ({reported_user.id})", "Null")
         await self.bot.pg_conn.execute("""
             UPDATE id_data
             SET report_id = report_id + 1
@@ -76,7 +76,7 @@ class Reports(commands.Cog):
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
-        report_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        report_moderator = f"{ctx.author} ({ctx.author.id})"
         embed.title = report['reportTitle'] + " Accepted"
         embed.description = (
             f"**Report for**: {reported_user.mention}\n"
@@ -84,7 +84,7 @@ class Reports(commands.Cog):
             f"**Report reason**: {report['reportReason']}"
         )
         if reason:
-            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+            embed.add_field(name=f"Reason by {f'{ctx.author}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_green()
         embed.set_footer(text=f"ReportID: {report['reportID']} | {report['reportTime']}")
@@ -111,7 +111,7 @@ class Reports(commands.Cog):
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
-        report_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        report_moderator = f"{ctx.author} ({ctx.author.id})"
         embed.title = report['reportTitle'] + " Declined"
         embed.description = (
             f"**Report for**: {reported_user.mention}\n"
@@ -119,7 +119,7 @@ class Reports(commands.Cog):
             f"**Report reason**: {report['reportReason']}"
         )
         if reason:
-            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+            embed.add_field(name=f"Reason by {f'{ctx.author}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_green()
         embed.set_footer(text=f"ReportID: {report['reportID']} | {report['reportTime']}")
@@ -146,7 +146,7 @@ class Reports(commands.Cog):
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
-        report_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        report_moderator = f"{ctx.author} ({ctx.author.id})"
         embed.title = report['reportTitle'] + " Fake"
         embed.description = (
             f"**Report for**: {reported_user.mention}\n"
@@ -154,7 +154,7 @@ class Reports(commands.Cog):
             f"**Report reason**: {report['reportReason']}"
         )
         if reason:
-            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+            embed.add_field(name=f"Reason by {f'{ctx.author}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_green()
         embed.set_footer(text=f"ReportID: {report['reportID']} | {report['reportTime']}")
@@ -181,7 +181,7 @@ class Reports(commands.Cog):
         embed = discord.Embed()
         author = ctx.guild.get_member(int(report['reportAuthor'].split(' ')[-1].strip('( )')))
         reported_user = ctx.guild.get_member(int(report['reportUser'].split(' ')[-1].strip('( )')))
-        report_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        report_moderator = f"{ctx.author} ({ctx.author.id})"
         embed.title = report['reportTitle'] + " spam"
         embed.description = (
             f"**Report for**: {reported_user.mention}\n"
@@ -189,7 +189,7 @@ class Reports(commands.Cog):
             f"**Report reason**: {report['reportReason']}"
         )
         if reason:
-            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+            embed.add_field(name=f"Reason by {f'{ctx.author}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_green()
         embed.set_footer(text=f"ReportID: {report['reportID']} | {report['reportTime']}")

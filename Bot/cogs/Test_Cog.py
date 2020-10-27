@@ -1,3 +1,4 @@
+from pprint import pprint
 from typing import Optional
 
 import discord
@@ -15,6 +16,30 @@ class HelpMenuPages(menus.MenuPages):
             elif payload.event_type == 'REACTION_REMOVE':
                 return
         await super().update(payload)
+
+
+class MyPaginatorHelpList(menus.ListPageSource):
+    def __init__(self, cog_name, entries, per_page=3):
+        super().__init__(entries, per_page=per_page)
+        self.cog_name = cog_name
+        self.cog = None
+
+    async def format_page(self, menu: menus.Menu, entries):
+        self.cog = menu.bot.get_cog(self.cog_name)
+        print(self.cog_name)
+        embed = discord.Embed()
+        embed.title = f"{self.cog.qualified_name.upper() if len(self.cog.qualified_name) < 3 else self.cog.qualified_name.capitalize()} cog's help"
+        if menu.current_page == 0:
+            embed.description = f"{self.cog.description.format(prefix_1=menu.ctx.prefix)}" if self.cog.description else "No description"
+        help_command = MyHelpCommand2()
+        help_command.context = menu.ctx
+        if menu.current_page != 0:
+            for command in entries:
+                embed.add_field(name=f"`{help_command.get_command_signature(command)}`**:**", value=command.help, inline=False)
+        embed.set_footer(
+            text=f"Page {menu.current_page + 1}/{self.get_max_pages()} Type {menu.ctx.prefix}help [command] for more info on a command. \nYou can also type {menu.ctx.prefix}help [category] for more info on a category and {menu.ctx.prefix}help [command] [subcommand] for more info in a sub command.")
+
+        return embed
 
 
 class MyPaginatorHelpBot(menus.GroupByPageSource):
@@ -54,8 +79,7 @@ class MyPaginatorHelpBot(menus.GroupByPageSource):
             help_command = MyHelpCommand2()
             help_command.context = menu.ctx
             if menu.current_page != 0:
-                entries_ = self.old_entries + entries.items
-                for command in entries_:
+                for command in entries.items:
                     embed.add_field(name=f"`{help_command.get_command_signature(command)}`**:**", value=command.help, inline=False)
             embed.set_footer(
                 text=f"Page {menu.current_page + 1}/{self.get_max_pages()} Type {menu.ctx.prefix}help [command] for more info on a command. \nYou can also type {menu.ctx.prefix}help [category] for more info on a category and {menu.ctx.prefix}help [command] [subcommand] for more info in a sub command.")
@@ -88,18 +112,24 @@ class MyHelpCommand2(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         bot: commands.Bot = self.context.bot
         cogs_ = sorted(bot.cogs.values(), key=lambda cog: cog.qualified_name)
+        cogs_ = filter(lambda cog: len(cog.get_commands()) > 0, cogs_)
+        cogs_ = filter(lambda cog: (cog.qualified_name not in ["System", "Test_Cog"]), cogs_)
         paginator_ = MyPaginatorHelpBot(cogs_, key=lambda c: "bot", per_page=1)
         pages_ = HelpMenuPages(source=paginator_, clear_reactions_after=True)
         await pages_.start(self.context)
 
     async def send_cog_help(self, cog):
-        commands_ = sorted(await self.filter_commands(cog.get_commands(), sort=True), key=lambda command: command.qualified_name)
-        paginator_ = MyPaginatorHelpBot(commands_, key=lambda command: command.cog_name or 'No Category', per_page=5)
+        commands_ = ['_', '_', '_', '_', '_']
+        commands_.extend(sorted(await self.filter_commands(cog.get_commands(), sort=True), key=lambda command: command.qualified_name))
+        pprint(commands_)
+        paginator_ = MyPaginatorHelpList(cog.qualified_name, commands_, per_page=5)
         pages_ = HelpMenuPages(source=paginator_, clear_reactions_after=True)
         await pages_.start(self.context)
 
     async def send_group_help(self, group: commands.Group):
         commands_ = sorted(await self.filter_commands(group.commands, sort=True), key=lambda command: command.qualified_name)
+        if not commands_:
+            return await self.send_command_help(group)
         paginator_ = MyPaginatorHelpBot(commands_, key=lambda group_: group_.full_parent_name, per_page=5)
         pages_ = HelpMenuPages(source=paginator_, clear_reactions_after=True)
         await pages_.start(self.context)
