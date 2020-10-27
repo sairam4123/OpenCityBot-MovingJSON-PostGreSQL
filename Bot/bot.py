@@ -22,7 +22,7 @@ PREFIX = os.getenv('DEFAULT_PREFIX')
 DELIMITER = os.getenv('DEFAULT_DELIMITER_FOR_ENV')
 IP_ADDRESS = os.getenv('IP_ADDRESS')
 PORT_NUMBER = os.getenv('PORT_NUMBER')
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv('HEROKU_POSTGRESQL_BLACK_URL') or os.getenv('DATABASE_URL')
 SSL_REQUIRED = bool(int(os.getenv('SSL_REQUIRED', False)))
 
 
