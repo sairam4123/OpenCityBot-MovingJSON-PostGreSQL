@@ -36,12 +36,16 @@ class Voice_Text_Link(commands.Cog):
                 """, member.guild.id)
         if f"Bot.cogs.{self.qualified_name}" in enabled:
             if after.channel and (not before.channel):
-                after_text_channel_id = await self.bot.pg_conn.fetchval("""
-                SELECT text_channel_id FROM voice_text_data
+                after_text_channel_id, history_for_text = await self.bot.pg_conn.fetchval("""
+                SELECT (text_channel_id, history_for_text) FROM opencitybot_beta.public.voice_text_data
                 WHERE guild_id = $1 AND voice_channel_id = $2
                 """, member.guild.id, after.channel.id)
                 channel: discord.TextChannel = discord.utils.get(member.guild.text_channels, id=after_text_channel_id)
                 if channel:
+                    join_overwrites = {
+                        member.guild.default_role: discord.PermissionOverwrite(read_messages=False, send_messages=False, read_message_history=False),
+                        member: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True if history_for_text else False)
+                    }
                     await channel.edit(overwrites=join_overwrites)
             elif (not after.channel) and before.channel:
                 before_text_channel_id = await self.bot.pg_conn.fetchval("""

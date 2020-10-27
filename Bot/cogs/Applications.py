@@ -12,7 +12,7 @@ class Applications(commands.Cog):
     Application related commands.
 
     To apply:
-        1. `{prefix_1}apply <application_name>
+        1. `{prefix_1}apply <application_name>`
     """
 
     def __init__(self, bot):
@@ -28,6 +28,15 @@ class Applications(commands.Cog):
         if f"Bot.cogs.{self.qualified_name}" in enabled:
             return True
         return False
+    
+    async def get_destination_for_applications(self, guild: discord.Guild):
+        application_channel_id = await self.bot.pg_conn.fetch("""
+        SELECT channel_id FROM application_config_data
+        WHERE guild_id = $1
+        """, guild.id)
+        if not application_channel_id:
+            return None
+        return discord.utils.get(guild.channels, id=application_channel_id)
 
     @commands.group(aliases=['app', 'a'], invoke_without_command=True, help="Lists all applications")
     async def applications(self, ctx: commands.Context):
@@ -74,14 +83,14 @@ class Applications(commands.Cog):
                 await ctx.send(f"You took to long to respond {ctx.author.mention}")
                 break
             else:
-                if response_by_user in ['close', 'exit']:
+                if response_by_user.content in ['close', 'exit', 'cancel']:
                     await ctx.author.send("Okay, exiting!")
                     break
                 list_of_answers.append(response_by_user)
-        await ctx.author.send('You\'ve successfully answered all of my questions')
+        await ctx.author.send('You\'ve successfully answered all of my questions!')
         await ctx.author.send('Thank you for your time!')
         embed = discord.Embed()
-        embed.title = f"{ctx.author.name}#{ctx.author.discriminator}"
+        embed.title = f"{ctx.author}"
         for index, (question, answer) in enumerate(zip(list_of_questions, list_of_answers), start=1):
             embed.add_field(name=f"{index}. {question}", value=f"{answer.content}", inline=False)
         await ctx.send(embed=embed)
@@ -198,7 +207,34 @@ class Applications(commands.Cog):
         WHERE guild_id = $1 AND application_name = $2
         """, ctx.guild.id, application_name)
         await ctx.send("Removed application successfully")
-
-
+    
+    @applications.command(name='config', help="Configures the application channel")
+    async def application_config(self, ctx):
+        pass
+    
+    @applications.group(name='config', help="Configures the application channel")
+    async def application_config(self, ctx):
+        pass
+    
+    @application_config.command(name='set_application_channel', help="Sets the application channel", aliases=['sac'])
+    async def application_config_set_application_channel(self, ctx, channel: discord.TextChannel):
+        application_channel_id = await self.bot.pg_conn.fetch("""
+        SELECT channel_id FROM application_config_data
+        WHERE guild_id = $1
+        """, ctx.guild.id)
+        if not application_channel_id:
+            await self.bot.pg_conn.execute("""
+            INSERT INTO application_config_data
+            VALUES ($1, $2)
+            """, ctx.guild.id, channel.id)
+            await ctx.send(f"Set application channel to {channel.mention}")
+        else:
+            await self.bot.pg_conn.execute("""
+            UPDATE application_config_data
+            SET channel_id = $2
+            WHERE guild_id = $1
+            """, ctx.guild.id, channel.id)
+            await ctx.send(f"Updated application channel to {channel.mention}")
+    
 def setup(bot):
     bot.add_cog(Applications(bot))

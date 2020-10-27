@@ -21,6 +21,7 @@ dblpy = "*"
 better-profanity = "*"
 menus = {git = "https://github.com/Rapptz/discord-ext-menus"}
 parsedatetime = "*"
+colour = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"

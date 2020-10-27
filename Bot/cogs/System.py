@@ -33,7 +33,7 @@ class System(commands.Cog):
         WHERE row_id = 1
         """, black_listed_users)
         reason = reason.strip('"')
-        await ctx.send(f"I have blacklisted **{member_or_user.display_name}#{member_or_user.discriminator}** because of {reason}")
+        await ctx.send(f"I have blacklisted **{member_or_user}** because of {reason}")
 
     @commands.command(help='Unblacklists a member from using the bot.')
     @commands.is_owner()
@@ -53,7 +53,7 @@ class System(commands.Cog):
             WHERE row_id = 1
             """, black_listed_users)
         reason = reason.strip('"')
-        await ctx.send(f"I have unblacklisted **{member_or_user.display_name}#{member_or_user.discriminator}** because of \"{reason}\".")
+        await ctx.send(f"I have unblacklisted **{member_or_user}** because of \"{reason}\".")
 
     @commands.command(help="Reloads all cogs.")
     @commands.is_owner()

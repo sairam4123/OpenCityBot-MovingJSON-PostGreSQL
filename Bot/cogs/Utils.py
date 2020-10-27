@@ -78,7 +78,7 @@ class Utils(commands.Cog):
     @commands.command(help="Gives the avatar.", name="avatar", aliases=['av'])
     async def avatar(self, ctx, member: Optional[Union[discord.Member, discord.User]]):
         member = ctx.author if not member else member
-        embed = discord.Embed(title=f"Avatar for {member.name}#{member.discriminator}")
+        embed = discord.Embed(title=f"Avatar for {member}")
         png = f"[png]({member.avatar_url_as(format='png')})"
         jpg = f"[jpg]({member.avatar_url_as(format='jpg')})"
         webp = f"[webp]({member.avatar_url_as(format='webp')})"

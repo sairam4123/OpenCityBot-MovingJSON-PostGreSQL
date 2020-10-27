@@ -256,11 +256,11 @@ class Information(commands.Cog):
         bot_owners = ""
         if appinfo.team is None:
             bot_owner = await self.bot.fetch_user(self.bot.owner_id)
-            bot_owners = "`" + bot_owner.display_name + "#" + bot_owner.discriminator + "`"
+            bot_owners = f"`{bot_owner}`"
         else:
             for bot_owner_id in self.bot.owner_ids:
                 bot_owner = await self.bot.fetch_user(bot_owner_id)
-                bot_owners += " `" + bot_owner.display_name + "#" + bot_owner.discriminator + "`"
+                bot_owners += f" `{bot_owner}`"
 
         embed = discord.Embed()
         embed.set_author(name=ctx.me.display_name, icon_url=ctx.me.avatar_url)

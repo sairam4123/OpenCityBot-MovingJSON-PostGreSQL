@@ -24,11 +24,7 @@ class Mention_Reply(commands.Cog):
     async def on_message_create(self, message: discord.Message):
         try:
             prefix = random.choice(await self.bot.get_prefix(message))
-            enabled = await self.bot.pg_conn.fetchval("""
-                        SELECT enabled FROM cogs_data
-                        WHERE guild_id = $1
-                        """, message.guild.id)
-            if message.channel.type == discord.ChannelType.private or f"Bot.cogs.{self.qualified_name}" in enabled:
+            if message.channel.type == discord.ChannelType.private:
                 if message.content.startswith('<@') and message.content.endswith('>'):
                     for mention in message.mentions:
                         if mention == self.bot.user:

@@ -57,7 +57,7 @@ class Suggestions(commands.Cog):
         await self.bot.pg_conn.execute("""
         INSERT INTO suggestion_data
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        """, suggestion_id, message_sent.id, title, suggestion, f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})", indian_standard_time_now()[1],
+        """, suggestion_id, message_sent.id, title, suggestion, f"{ctx.author} ({ctx.author.id})", indian_standard_time_now()[1],
                                        message_sent.channel.id, message_sent.guild.id, type1, "waiting", "Null")
         await self.bot.pg_conn.execute("""
         UPDATE id_data
@@ -81,14 +81,14 @@ class Suggestions(commands.Cog):
             return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
-        suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        suggestion_moderator = f"{ctx.author} ({ctx.author.id})"
         embed.title = suggestion['suggestionTitle'] + " Approved"
         embed.description = (
             f"**Suggestion**: {suggestion['suggestionContent']}\n"
             f"**Suggested by**: {author.mention}"
         )
         if reason:
-            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+            embed.add_field(name=f"Reason by {f'{ctx.author}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_green()
         embed.set_footer(text=f"SuggestionID: {suggestion['suggestionID']} | {suggestion['suggestionTime']}")
@@ -114,14 +114,14 @@ class Suggestions(commands.Cog):
             return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
-        suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        suggestion_moderator = f"{ctx.author} ({ctx.author.id})"
         embed.title = suggestion['suggestionTitle'] + " Denied"
         embed.description = (
             f"**Suggestion**: {suggestion['suggestionContent']}\n"
             f"**Suggested by**: {author.mention}"
         )
         if reason:
-            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+            embed.add_field(name=f"Reason by {f'{ctx.author}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.blue()
         embed.set_footer(text=f"SuggestionID: {suggestion['suggestionID']} | {suggestion['suggestionTime']}")
@@ -147,14 +147,14 @@ class Suggestions(commands.Cog):
             return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
-        suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        suggestion_moderator = f"{ctx.author} ({ctx.author.id})"
         embed.title = suggestion[0]['suggestionTitle'] + " Considered"
         embed.description = (
             f"**Suggestion**: {suggestion['suggestionContent']}\n"
             f"**Suggested by**: {author.mention}"
         )
         if reason:
-            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+            embed.add_field(name=f"Reason by {f'{ctx.author}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_red()
         embed.set_footer(text=f"SuggestionID: {suggestion['suggestionID']} | {suggestion[0]['suggestionTime']}")
@@ -180,14 +180,14 @@ class Suggestions(commands.Cog):
             return await ctx.send(f"{suggestion_id} is wrong")
         embed = discord.Embed()
         author = ctx.guild.get_member(int(suggestion['suggestionAuthor'].split(' ')[-1].strip('( )')))
-        suggestion_moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        suggestion_moderator = f"{ctx.author} ({ctx.author.id})"
         embed.title = suggestion['suggestionTitle'] + " Implemented"
         embed.description = (
             f"**Suggestion**: {suggestion['suggestionContent']}\n"
             f"**Suggested by**: {author.mention}"
         )
         if reason:
-            embed.add_field(name=f"Reason by {f'{ctx.author.name}#{ctx.author.discriminator}'}", value=reason)
+            embed.add_field(name=f"Reason by {f'{ctx.author}'}", value=reason)
         embed.set_author(name=author.name, icon_url=author.avatar_url)
         embed.colour = discord.Colour.dark_green()
         embed.set_footer(text=f"SuggestionID: {suggestion['suggestionID']} | {suggestion['suggestionTime']}")

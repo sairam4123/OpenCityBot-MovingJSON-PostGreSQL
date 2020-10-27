@@ -42,13 +42,13 @@ class Tunnel(commands.Cog):
             ctx.author: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True),
             member: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True)
         }
-        author = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+        author = f"{ctx.author} ({ctx.author.id})"
         embed = discord.Embed(
             title=f"Thank you for creating a tunnel! {ctx.author.name} This is Tunnel #{tunnel_number}",
             description=f"Thank you for creating a tunnel! {ctx.author.mention}\nWe'll get back to you as soon as possible.",
         )
         embed.set_footer(text=f"TunnelID: {tunnel_id} | {indian_standard_time_now()[1]}")
-        member_ = f"{member.name}#{member.discriminator} ({member.id})"
+        member_ = f"{member} ({member.id})"
         if not discord.utils.get(ctx.guild.categories, name="Tunnels"):
             await ctx.guild.create_category(name="Tunnels")
         channel = await ctx.guild.create_text_channel(name=f'{ctx.author.name}-{ctx.author.discriminator}-_-{member.name}-{member.discriminator}',
@@ -81,7 +81,7 @@ class Tunnel(commands.Cog):
         if (ctx.channel.id == int(tunnel['tunnelChannelID'])) or (discord.utils.get(ctx.guild.roles, name="Support") in ctx.author.roles) or (ctx.author == ctx.guild.owner):
             file = await message_history_into_transcript_file_object(ctx.channel, tunnel_owner, tunnel['tunnelID'])
             await tunnel_owner.send(file=file)
-            moderator = f"{ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})"
+            moderator = f"{ctx.author} ({ctx.author.id})"
             await self.bot.pg_conn.execute("""
                 UPDATE tunnel_data
                 SET "tunnelClosedTime" = $2,
@@ -157,7 +157,7 @@ class Tunnel(commands.Cog):
             WHERE "tunnelID" = $1 OR "tunnelChannelID" = $2
             """, tunnel_id, ctx.channel.id)
         tunnel_users = tunnel['tunnelUsers']
-        user_1 = f"{user.name}#{user.discriminator} ({user.id})"
+        user_1 = f"{user} ({user.id})"
         tunnel_users, user_1, index = insert_or_append(tunnel_users, user_1)
         if tunnel_users:
             tunnel_users.remove("No user was added till now.")
@@ -181,7 +181,7 @@ class Tunnel(commands.Cog):
                    WHERE "tunnelID" = $1 OR "tunnelChannelID" = $2
                    """, tunnel_id, ctx.channel.id)
         tunnel_users = tunnel['tunnelUsers']
-        user_1 = f"{user.name}#{user.discriminator} ({user.id})"
+        user_1 = f"{user} ({user.id})"
         tunnel_users, user_1, index = pop_or_remove(tunnel_users, user_1)
         if not tunnel_users:
             tunnel_users.append("No user was added till now.")

@@ -33,13 +33,19 @@ async def get_prefix(bot_1, message):
     SELECT prefixes FROM prefix_data
     WHERE guild_id = $1
     """, message.guild.id)
+    # print(spaced_prefixes)
     if not prefixes:
         await bot_1.pg_conn.execute("""
         INSERT INTO prefix_data (guild_id, prefixes)
         VALUES ($1, $2)
         """, message.guild.id, bot_1.prefix_default)
-        return commands.when_mentioned_or(*bot_1.prefix_default)(bot_1, message)
-    return commands.when_mentioned_or(*prefixes)(bot_1, message)
+        spaced_prefixes = [prefix + " " for prefix in bot_1.prefix_default]
+        spaced_prefixes += bot_1.prefix_default
+        # print(spaced_prefixes)
+        return commands.when_mentioned_or(*spaced_prefixes)(bot_1, message)
+    spaced_prefixes = [prefix + " " for prefix in prefixes]
+    spaced_prefixes += prefixes
+    return commands.when_mentioned_or(*spaced_prefixes)(bot_1, message)
 
 
 bot = commands.AutoShardedBot(command_prefix=get_prefix)
@@ -52,7 +58,7 @@ def hello():
 
 
 bot.oauth_url = discord.utils.oauth_url(client_id=CLIENT_ID, permissions=discord.Permissions(8))
-bot.init_cogs = [f'Bot.cogs.{filename[:-3]}' for filename in os.listdir('Bot/cogs') if filename.endswith('.py')]
+bot.init_cogs = [f'Bot.cogs.{filename[:-3]}' for filename in os.listdir('Bot/cogs') if filename.endswith('.py') if not filename.startswith('_') if not filename.startswith(('System', 'Test_Cog', 'Mention_Reply', 'Information', 'Configuration'))]
 bot.invite_url = discord.utils.oauth_url(client_id=CLIENT_ID, permissions=discord.Permissions(8))
 bot.start_time = datetime.datetime.utcnow()
 bot.credits = ['NameKhan72', 'SQWiperYT', 'Wizard BINAY', 'Sairam']
@@ -106,7 +112,13 @@ async def on_ready():
 
 for filename in os.listdir('Bot/cogs'):
     if filename.endswith('.py') and not filename.startswith('_'):
-        bot.load_extension(f'Bot.cogs.{filename[:-3]}')
+        try:
+            bot.load_extension(f'Bot.cogs.{filename[:-3]}')
+        except commands.ExtensionNotFound:
+            print('extension can\'t found', filename)
+        else:
+            print('extension found', filename)
+            print('loading... ')
 
 
 @bot.event
@@ -173,7 +185,7 @@ async def add_guild_to_db():
                 await bot.pg_conn.execute("""
                 INSERT INTO cogs_data (guild_id, enabled, disabled)
                 VALUES ($1, $2, $3)
-                """, guild.id, bot.init_cogs, ["None"])
+                """, guild.id, ["None"], bot.init_cogs)
 
 
 @tasks.loop(seconds=10)
