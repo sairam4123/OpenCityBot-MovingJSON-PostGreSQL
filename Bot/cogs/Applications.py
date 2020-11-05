@@ -212,10 +212,6 @@ class Applications(commands.Cog):
     async def application_config(self, ctx):
         pass
     
-    @applications.group(name='config', help="Configures the application channel")
-    async def application_config(self, ctx):
-        pass
-    
     @application_config.command(name='set_application_channel', help="Sets the application channel", aliases=['sac'])
     async def application_config_set_application_channel(self, ctx, channel: discord.TextChannel):
         application_channel_id = await self.bot.pg_conn.fetch("""
