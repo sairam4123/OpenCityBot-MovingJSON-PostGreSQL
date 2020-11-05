@@ -208,7 +208,7 @@ class Applications(commands.Cog):
         """, ctx.guild.id, application_name)
         await ctx.send("Removed application successfully")
     
-    @applications.command(name='config', help="Configures the application channel")
+    @applications.group(name='config', help="Configures the application channel")
     async def application_config(self, ctx):
         pass
     
