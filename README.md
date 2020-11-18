@@ -30,10 +30,10 @@ For other IDEs:
   6. Run the `start.sh`
 
 For terminal:
-  2. Rename `.env.example` to `.env` file and replace the TOKEN, DB_URL and more.
-  4. Run this code `pipenv install` (I assume that you have installed pipenv else `pip install pipenv`)
-  5. Run this code `python table_creator`
-  6. Run the `start.sh`
+  1. Rename `.env.example` to `.env` file and replace the TOKEN, DB_URL and more.
+  2. Run this code `pipenv install` (I assume that you have installed pipenv else `pip install pipenv`)
+  3. Run this code `python table_creator`
+  4. Run the `start.sh`
 
 That's it
 
