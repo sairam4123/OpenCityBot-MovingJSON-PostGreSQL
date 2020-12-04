@@ -95,18 +95,13 @@ async def on_ready():
         )
     print("\n")
     for guild_index, guild in enumerate(bot.guilds):
-        members = '\n - '.join([f"{member} (id: {member.id})" for member in guild.members])
         print(f'{guild.name} (id: {guild.id})')
-        print(f'Guild Members of {guild.name} are:\n - {members}')
-        print(f"The above server has {guild.member_count} members")
+        print(f"The above server has {guild.member_count} members.")
         if guild_index != (len(bot.guilds) - 1):
             print('\n\n\n', end="")
 
     print(f"\n\nI can view {len(bot.users)} members in {len(bot.guilds)} guilds.")
     print()
-    print()
-    for command in bot.walk_commands():
-        print(f"{command.qualified_name} -> {command.help} -> {command.cog_name}")
     BOT_IS_READY = True
 
 
