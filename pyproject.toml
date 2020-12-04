@@ -6,7 +6,7 @@ authors = ["sairam4123 <sairamkumar2022@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.8.6"
 asyncpg = "^0.21.0"
 Quart = "^0.13.1"
 "discord.py" = "1.5.1"
