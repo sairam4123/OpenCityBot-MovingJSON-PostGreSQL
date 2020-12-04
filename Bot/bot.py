@@ -48,7 +48,7 @@ async def get_prefix(bot_1, message):
     return commands.when_mentioned_or(*spaced_prefixes)(bot_1, message)
 
 
-bot = commands.AutoShardedBot(command_prefix=get_prefix)
+bot = commands.AutoShardedBot(command_prefix=get_prefix, intents=discord.Intents.all())
 app = Quart(__name__)
 
 
