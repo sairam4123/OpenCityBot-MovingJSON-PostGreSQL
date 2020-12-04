@@ -3,7 +3,7 @@ import os
 
 import asyncpg
 
-DATABASE_URL = os.getenv('HEROKU_POSTGRESQL_BLACK_URL') or os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv('HEROKU_POSTGRESQL_OLIVE_URL') or os.getenv('HEROKU_POSTGRESQL_BLACK_URL') or os.getenv('DATABASE_URL')
 
 
 async def create_tables():
