@@ -34,7 +34,8 @@ async def create_tables():
             (
                 guild_id         bigint,
                 voice_channel_id bigint,
-                text_channel_id  bigint
+                text_channel_id  bigint,
+                history_for_text boolean
             );
 
             create table if not exists suggestion_data
