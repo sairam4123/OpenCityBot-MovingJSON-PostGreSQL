@@ -37,7 +37,7 @@ class Voice_Text_Link(commands.Cog):
         if f"Bot.cogs.{self.qualified_name}" in enabled:
             if after.channel and (not before.channel):
                 after_text_channel_id, history_for_text = await self.bot.pg_conn.fetchval("""
-                SELECT (text_channel_id, history_for_text) FROM opencitybot_beta.public.voice_text_data
+                SELECT (text_channel_id, history_for_text) FROM voice_text_data
                 WHERE guild_id = $1 AND voice_channel_id = $2
                 """, member.guild.id, after.channel.id)
                 channel: discord.TextChannel = discord.utils.get(member.guild.text_channels, id=after_text_channel_id)
